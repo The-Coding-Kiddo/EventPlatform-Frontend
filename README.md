@@ -16,16 +16,21 @@ The system is divided into two primary entry points:
 ## 🚀 Getting Started
 
 **1. Install Dependencies**
-\`\`\`bash
+```bash
 npm install
-\`\`\`
+```
 
 **2. Start the Development Server**
-\`\`\`bash
+```bash
 npm run dev
-\`\`\`
+```
 
 ## 📌 Recent Updates
-* Set up standard `PublicLayout` with global `Navbar` and `Footer`.
-* Implemented the `Home` page.
-* Created the `EventListCard` component for displaying horizontal event rows.
+* Authentication Engine: Fully implemented `AuthContext` for global session management.
+* Session Persistence: Added logic to auto-restore user sessions from localStorage on page refresh.
+* Security & Networking: 
+    Set up Axios instance with Request Interceptors to automatically attach JWT tokens. 
+    Implemented a Response Interceptor to handle 401 Unauthorized errors (auto-logout on token expiry).
+* UI Components:
+    Created Login and Register pages with native HTML validation.
+    Updated Navbar with dynamic user profile dropdowns and logout functionality.
