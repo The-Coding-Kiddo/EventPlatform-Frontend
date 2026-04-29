@@ -1,10 +1,12 @@
+import { useAuth } from './AuthContext'
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import {
   fetchAllEvents,
-  submitEvent    as svcSubmitEvent,
-  saveDraft      as svcSaveDraft,
-  updateEvent    as svcUpdateEvent,
-  deleteEvent    as svcDeleteEvent,
+  fetchPublicEvents,
+  submitEvent as svcSubmitEvent,
+  saveDraft as svcSaveDraft,
+  updateEvent as svcUpdateEvent,
+  deleteEvent as svcDeleteEvent,
   _mockEvents,
   _mockModerationQueue,
   _setNextEventId,
@@ -23,8 +25,8 @@ import { storageGet, storageSet } from '../utils/storage'
 const EventContext = createContext({
   events: [], publicEvents: [], moderationQueue: [], eventsLoading: false,
   submitEvent: async () => ({}), saveDraft: async () => ({}),
-  updateEvent: async () => ({}), deleteEvent: async () => {},
-  resolveModeration: async () => {},
+  updateEvent: async () => ({}), deleteEvent: async () => { },
+  resolveModeration: async () => { },
   getInstitutionEvents: () => [], getDrafts: () => [],
 })
 
@@ -56,39 +58,49 @@ function initQueue() {
 }
 
 export function EventProvider({ children }) {
-  const [events,          setEvents]          = useState(initEvents)
+  const [events, setEvents] = useState(initEvents)
   const [moderationQueue, setModerationQueue] = useState(initQueue)
-  const [eventsLoading,   setEventsLoading]   = useState(!USE_MOCK)
+  const [eventsLoading, setEventsLoading] = useState(!USE_MOCK)
   const { addNotification } = useNotifications()
-
-  // ── Persist to localStorage whenever state changes (mock mode only) ──
-  useEffect(() => { if (USE_MOCK) storageSet('events', events) }, [events])
-  useEffect(() => { if (USE_MOCK) storageSet('mod_queue', moderationQueue) }, [moderationQueue])
-
-  // ── Load from backend on mount (real mode only) ──────────────────
+  const { user } = useAuth()
   useEffect(() => {
-    if (USE_MOCK) return
-    Promise.all([
-      fetchAllEvents(),
-      fetchModerationQueue(),
-    ])
-      .then(([evts, queue]) => {
-        setEvents(evts)
-        setModerationQueue(queue)
-      })
-      .catch(err => console.error('[EventContext] failed to load events', err))
-      .finally(() => setEventsLoading(false))
-  }, [])
+    if (USE_MOCK) return;
+    setEventsLoading(true);
+
+    const loadData = async () => {
+      try {
+        // 1. Everyone can see public events
+        const publicEvts = await fetchPublicEvents();
+        let allEvts = publicEvts;
+        let queue = [];
+
+        // 2. Fetch privileged data based on role
+        if (user?.role === 'super_admin') {
+          allEvts = await fetchAllEvents();
+          queue = await fetchModerationQueue();
+        } else if (user?.role === 'institution_admin') {
+          allEvts = await fetchAllEvents();
+        }
+
+        setEvents(allEvts);
+        setModerationQueue(queue);
+      } catch (err) {
+        console.error('[EventContext] failed to load events', err);
+      } finally {
+        setEventsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user]);
 
   // ── submitEvent ─────────────────────────────────────────────────
-  /**
-   * Submit a new event through the moderation pipeline.
-   * Returns { event, moderation }.
-   */
   const submitEvent = useCallback(async (formData) => {
     const result = await svcSubmitEvent(formData)
     setEvents(prev => [...prev, result.event])
-    setModerationQueue(prev => [result.moderation, ...prev])
+    if (result.moderation) {
+      setModerationQueue(prev => [result.moderation, ...prev])
+    }
     return result
   }, [])
 
@@ -142,7 +154,7 @@ export function EventProvider({ children }) {
     } else {
       // Fallback: update by eventId reference
       setEvents(prev => prev.map(e => {
-        const matchById    = queueItem.eventId && e.id === queueItem.eventId
+        const matchById = queueItem.eventId && e.id === queueItem.eventId
         const matchByTitle = !queueItem.eventId && e.title === (queueItem.title || queueItem.eventTitle)
         return (matchById || matchByTitle) ? { ...e, status: newStatus } : e
       }))
@@ -151,22 +163,22 @@ export function EventProvider({ children }) {
     // Notify the institution admin who submitted
     const eventTitle = queueItem.eventTitle || queueItem.title || 'Event'
     await addNotification({
-      type:           newStatus === 'approved' ? 'event_approved' : 'event_rejected',
-      title:          newStatus === 'approved' ? 'Event Approved' : 'Event Rejected',
-      message:        `"${eventTitle}" has been ${newStatus}${note ? `. Note: ${note}` : '.'}`,
-      eventId:        queueItem.eventId ?? null,
-      forRole:        'institution_admin',
+      type: newStatus === 'approved' ? 'event_approved' : 'event_rejected',
+      title: newStatus === 'approved' ? 'Event Approved' : 'Event Rejected',
+      message: `"${eventTitle}" has been ${newStatus}${note ? `. Note: ${note}` : '.'}`,
+      eventId: queueItem.eventId ?? null,
+      forRole: 'institution_admin',
       forInstitution: queueItem.institution || queueItem.submittedBy || '',
     })
 
     // Notify subscribed citizens when an event goes live
     if (newStatus === 'approved') {
       await addNotification({
-        type:        'new_event',
-        title:       `New ${queueItem.category} Event`,
-        message:     `"${eventTitle}" is now live`,
-        eventId:     queueItem.eventId ?? null,
-        forRole:     'citizen',
+        type: 'new_event',
+        title: `New ${queueItem.category} Event`,
+        message: `"${eventTitle}" is now live`,
+        eventId: queueItem.eventId ?? null,
+        forRole: 'citizen',
         forCategory: queueItem.category,
       })
     }
@@ -177,11 +189,11 @@ export function EventProvider({ children }) {
 
   const getInstitutionEvents = useCallback((institution) =>
     events.filter(e => e.institution === institution),
-  [events])
+    [events])
 
   const getDrafts = useCallback((institution) =>
     getInstitutionEvents(institution).filter(e => e.status === 'draft'),
-  [getInstitutionEvents])
+    [getInstitutionEvents])
 
   return (
     <EventContext.Provider value={{
