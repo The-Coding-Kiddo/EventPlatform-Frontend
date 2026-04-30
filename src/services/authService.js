@@ -204,7 +204,7 @@ export async function register(name, email, password) {
 
   // ── Real backend ──
   // POST /auth/register → { user: User }
-  return api.post('/auth/register', { name: trimmedName, email: normalizedEmail, password, role: 'citizen' })
+  return api.post('/auth/register', { name: trimmedName, email: normalizedEmail, password })
 }
 
 // ── User preference mutations ─────────────────────────────────────
