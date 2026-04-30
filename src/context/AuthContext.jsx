@@ -6,6 +6,7 @@ import {
   saveEvent        as apiSaveEvent,
   unsaveEvent      as apiUnsaveEvent,
   registerForEvent as apiRegisterForEvent,
+  unregisterFromEvent as apiUnregisterFromEvent,
   updateSubscriptions as apiUpdateSubscriptions,
 } from '../services/authService'
 import { USE_MOCK } from '../services/apiClient'
@@ -20,6 +21,7 @@ const prefsKey = (userId) => `user_prefs_${userId}`
  * auth service on every mount; only the user-owned lists are persisted here.
  */
 function persistPrefs(user) {
+  if (!USE_MOCK) return
   if (!user?.id) return
   storageSet(prefsKey(user.id), {
     savedEvents:      user.savedEvents      ?? [],
@@ -162,7 +164,9 @@ export function AuthProvider({ children }) {
         registeredEvents: (prev.registeredEvents || []).filter(id => id !== eventId)
       }
       persistPrefs(next)
-      // backend later: DELETE /registration
+      if (!USE_MOCK) {
+        apiUnregisterFromEvent(eventId).catch(() => {})
+      }
       return next
     })
   }

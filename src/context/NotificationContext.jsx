@@ -5,6 +5,7 @@ import {
   markAllNotificationsRead,
   createNotification,
 } from '../services/notificationService'
+import { USE_MOCK } from '../services/apiClient'
 import { storageGet, storageSet } from '../utils/storage'
 
 const NotificationContext = createContext({
@@ -22,14 +23,16 @@ export function NotificationProvider({ children }) {
 
   // ── Load on mount — only if nothing is in localStorage yet ──────
   useEffect(() => {
-    if (storageGet('notifications') !== null) return   // already restored
+    if (USE_MOCK && storageGet('notifications') !== null) return   // already restored
     fetchNotifications()
       .then(data => setNotifications(data))
       .catch(() => {/* silently fail — notifications are non-critical */})
   }, [])
 
   // ── Persist whenever notifications change ───────────────────────
-  useEffect(() => { storageSet('notifications', notifications) }, [notifications])
+  useEffect(() => { 
+    if (USE_MOCK) storageSet('notifications', notifications) 
+  }, [notifications])
 
   /**
    * Add a new notification (called internally from EventContext after moderation).

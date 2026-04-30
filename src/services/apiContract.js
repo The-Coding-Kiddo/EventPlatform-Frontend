@@ -85,11 +85,9 @@ export const API_CONTRACT = {
       category: 'string (optional)',
       city:     'string (optional)',
       search:   'string (optional)',
-      page:     'number (optional, default 1)',
-      limit:    'number (optional, default 20)',
     },
-    success: { data: 'Event[]', total: 'number', page: 'number', pages: 'number' },
-    notes:   'Only returns events with status="approved".',
+    success: 'Event[]',
+    notes:   'Only returns events with status="approved". Not paginated.',
   },
 
   getEvent: {

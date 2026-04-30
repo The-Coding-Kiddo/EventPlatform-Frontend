@@ -100,6 +100,8 @@ export function EventProvider({ children }) {
     setEvents(prev => [...prev, result.event])
     if (result.moderation) {
       setModerationQueue(prev => [result.moderation, ...prev])
+    } else if (!USE_MOCK) {
+      fetchModerationQueue().then(queue => setModerationQueue(queue)).catch(() => {})
     }
     return result
   }, [])
@@ -181,6 +183,10 @@ export function EventProvider({ children }) {
         forRole: 'citizen',
         forCategory: queueItem.category,
       })
+    }
+
+    if (!USE_MOCK) {
+      fetchModerationQueue().then(queue => setModerationQueue(queue)).catch(() => {})
     }
   }, [moderationQueue, addNotification])
 
