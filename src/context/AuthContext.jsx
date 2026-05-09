@@ -3,9 +3,9 @@ import {
   login  as authLogin,
   logout as authLogout,
   getCurrentUser,
-  saveEvent        as apiSaveEvent,
-  unsaveEvent      as apiUnsaveEvent,
-  registerForEvent as apiRegisterForEvent,
+  saveEvent           as apiSaveEvent,
+  unsaveEvent         as apiUnsaveEvent,
+  registerForEvent    as apiRegisterForEvent,
   unregisterFromEvent as apiUnregisterFromEvent,
   updateSubscriptions as apiUpdateSubscriptions,
 } from '../services/authService'
@@ -21,7 +21,6 @@ const prefsKey = (userId) => `user_prefs_${userId}`
  * auth service on every mount; only the user-owned lists are persisted here.
  */
 function persistPrefs(user) {
-  if (!USE_MOCK) return
   if (!user?.id) return
   storageSet(prefsKey(user.id), {
     savedEvents:      user.savedEvents      ?? [],
@@ -77,6 +76,8 @@ export function AuthProvider({ children }) {
       const prefs = storageGet(prefsKey(loggedInUser.id))
       const userWithPrefs = prefs ? { ...loggedInUser, ...prefs } : loggedInUser
       setUser(userWithPrefs)
+      // Signal other contexts (e.g. NotificationContext) to refresh after login
+      window.dispatchEvent(new CustomEvent('auth:login'))
       return userWithPrefs           // caller can use the returned user if needed
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.')

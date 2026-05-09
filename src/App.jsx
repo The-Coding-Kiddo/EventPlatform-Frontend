@@ -19,6 +19,7 @@ import RegisteredEventsPage from './pages/RegisteredEventsPage'
 import SubscriptionsPage from './pages/SubscriptionsPage'
 import ProfilePage from './pages/ProfilePage'
 import SettingsPage from './pages/SettingsPage'
+import NotificationsPage from './pages/NotificationsPage'
 
 // ── Error boundary (shows the real error instead of a blank screen) ──
 class ErrorBoundary extends React.Component {
@@ -76,6 +77,7 @@ export default function App() {
               <Route path="/subscriptions" element={<Layout><SubscriptionsPage /></Layout>} />
               <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
               <Route path="/settings" element={<Layout><SettingsPage /></Layout>} />
+              <Route path="/notifications" element={<Layout><NotificationsPage /></Layout>} />
 
               <Route path="/publish" element={<Layout><PublishEventPage /></Layout>} />
               <Route path="/moderation" element={<Layout hideFooter><ModerationPage /></Layout>} />

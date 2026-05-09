@@ -1,12 +1,10 @@
-import { useAuth } from './AuthContext'
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import {
-  fetchAllEvents,
   fetchPublicEvents,
-  submitEvent as svcSubmitEvent,
-  saveDraft as svcSaveDraft,
-  updateEvent as svcUpdateEvent,
-  deleteEvent as svcDeleteEvent,
+  submitEvent    as svcSubmitEvent,
+  saveDraft      as svcSaveDraft,
+  updateEvent    as svcUpdateEvent,
+  deleteEvent    as svcDeleteEvent,
   _mockEvents,
   _mockModerationQueue,
   _setNextEventId,
@@ -25,9 +23,10 @@ import { storageGet, storageSet } from '../utils/storage'
 const EventContext = createContext({
   events: [], publicEvents: [], moderationQueue: [], eventsLoading: false,
   submitEvent: async () => ({}), saveDraft: async () => ({}),
-  updateEvent: async () => ({}), deleteEvent: async () => { },
-  resolveModeration: async () => { },
+  updateEvent: async () => ({}), deleteEvent: async () => {},
+  resolveModeration: async () => {},
   getInstitutionEvents: () => [], getDrafts: () => [],
+  incrementAttendees: () => {},
 })
 
 // ── localStorage initializers (mock mode only) ────────────────────
@@ -58,51 +57,50 @@ function initQueue() {
 }
 
 export function EventProvider({ children }) {
-  const [events, setEvents] = useState(initEvents)
+  const [events,          setEvents]          = useState(initEvents)
   const [moderationQueue, setModerationQueue] = useState(initQueue)
-  const [eventsLoading, setEventsLoading] = useState(!USE_MOCK)
+  const [eventsLoading,   setEventsLoading]   = useState(!USE_MOCK)
   const { addNotification } = useNotifications()
-  const { user } = useAuth()
+
+  // ── Persist to localStorage whenever state changes (mock mode only) ──
+  useEffect(() => { if (USE_MOCK) storageSet('events', events) }, [events])
+  useEffect(() => { if (USE_MOCK) storageSet('mod_queue', moderationQueue) }, [moderationQueue])
+
+  // ── Load from backend on mount (real mode only) ──────────────────
   useEffect(() => {
-    if (USE_MOCK) return;
-    setEventsLoading(true);
+    if (USE_MOCK) return
 
-    const loadData = async () => {
+    async function loadEvents() {
       try {
-        // 1. Everyone can see public events
-        const publicEvts = await fetchPublicEvents();
-        let allEvts = publicEvts;
-        let queue = [];
-
-        // 2. Fetch privileged data based on role
-        if (user?.role === 'super_admin') {
-          allEvts = await fetchAllEvents();
-          queue = await fetchModerationQueue();
-        } else if (user?.role === 'institution_admin') {
-          allEvts = await fetchAllEvents();
-        }
-
-        setEvents(allEvts);
-        setModerationQueue(queue);
+        const evts = await fetchPublicEvents()
+        setEvents(Array.isArray(evts) ? evts : evts.items || [])
       } catch (err) {
-        console.error('[EventContext] failed to load events', err);
-      } finally {
-        setEventsLoading(false);
+        console.error('[EventContext] failed to load public events', err)
       }
-    };
 
-    loadData();
-  }, [user]);
+      try {
+        const queue = await fetchModerationQueue()
+        setModerationQueue(Array.isArray(queue) ? queue : queue.items || [])
+      } catch (err) {
+        console.warn('[EventContext] moderation queue not loaded. User may not be signed in as admin.', err)
+        setModerationQueue([])
+      }
+
+      setEventsLoading(false)
+    }
+
+    loadEvents()
+  }, [])
 
   // ── submitEvent ─────────────────────────────────────────────────
+  /**
+   * Submit a new event through the moderation pipeline.
+   * Returns { event, moderation }.
+   */
   const submitEvent = useCallback(async (formData) => {
     const result = await svcSubmitEvent(formData)
-    setEvents(prev => [...prev, result.event])
-    if (result.moderation) {
-      setModerationQueue(prev => [result.moderation, ...prev])
-    } else if (!USE_MOCK) {
-      fetchModerationQueue().then(queue => setModerationQueue(queue)).catch(() => {})
-    }
+    if (result.event) setEvents(prev => [...prev, result.event])
+    if (result.moderation) setModerationQueue(prev => [result.moderation, ...prev])
     return result
   }, [])
 
@@ -124,6 +122,17 @@ export function EventProvider({ children }) {
   const deleteEvent = useCallback(async (id) => {
     await svcDeleteEvent(id)
     setEvents(prev => prev.filter(e => e.id !== id))
+  }, [])
+
+  // ── incrementAttendees ──────────────────────────────────────────
+  // Called after a citizen registers (+1) or unregisters (-1) so the
+  // displayed count stays in sync without a full page reload.
+  const incrementAttendees = useCallback((eventId, delta) => {
+    setEvents(prev => prev.map(e =>
+      e.id === eventId
+        ? { ...e, attendees: Math.max(0, (e.attendees || 0) + delta) }
+        : e
+    ))
   }, [])
 
   // ── resolveModeration ───────────────────────────────────────────
@@ -156,7 +165,7 @@ export function EventProvider({ children }) {
     } else {
       // Fallback: update by eventId reference
       setEvents(prev => prev.map(e => {
-        const matchById = queueItem.eventId && e.id === queueItem.eventId
+        const matchById    = queueItem.eventId && e.id === queueItem.eventId
         const matchByTitle = !queueItem.eventId && e.title === (queueItem.title || queueItem.eventTitle)
         return (matchById || matchByTitle) ? { ...e, status: newStatus } : e
       }))
@@ -165,41 +174,38 @@ export function EventProvider({ children }) {
     // Notify the institution admin who submitted
     const eventTitle = queueItem.eventTitle || queueItem.title || 'Event'
     await addNotification({
-      type: newStatus === 'approved' ? 'event_approved' : 'event_rejected',
-      title: newStatus === 'approved' ? 'Event Approved' : 'Event Rejected',
-      message: `"${eventTitle}" has been ${newStatus}${note ? `. Note: ${note}` : '.'}`,
-      eventId: queueItem.eventId ?? null,
-      forRole: 'institution_admin',
+      type:           newStatus === 'approved' ? 'event_approved' : 'event_rejected',
+      title:          newStatus === 'approved' ? 'Event Approved' : 'Event Rejected',
+      message:        `"${eventTitle}" has been ${newStatus}${note ? `. Note: ${note}` : '.'}`,
+      eventId:        queueItem.eventId ?? null,
+      forRole:        'institution_admin',
       forInstitution: queueItem.institution || queueItem.submittedBy || '',
     })
 
     // Notify subscribed citizens when an event goes live
     if (newStatus === 'approved') {
       await addNotification({
-        type: 'new_event',
-        title: `New ${queueItem.category} Event`,
-        message: `"${eventTitle}" is now live`,
-        eventId: queueItem.eventId ?? null,
-        forRole: 'citizen',
+        type:        'new_event',
+        title:       `New ${queueItem.category} Event`,
+        message:     `"${eventTitle}" is now live`,
+        eventId:     queueItem.eventId ?? null,
+        forRole:     'citizen',
         forCategory: queueItem.category,
       })
-    }
-
-    if (!USE_MOCK) {
-      fetchModerationQueue().then(queue => setModerationQueue(queue)).catch(() => {})
     }
   }, [moderationQueue, addNotification])
 
   // ── Derived views ────────────────────────────────────────────────
-  const publicEvents = events.filter(e => e.status === 'approved')
+  const safeEvents = Array.isArray(events) ? events : []
+  const publicEvents = safeEvents.filter(e => e.status === 'approved')
 
   const getInstitutionEvents = useCallback((institution) =>
-    events.filter(e => e.institution === institution),
-    [events])
+    safeEvents.filter(e => e.institution === institution),
+  [safeEvents])
 
   const getDrafts = useCallback((institution) =>
     getInstitutionEvents(institution).filter(e => e.status === 'draft'),
-    [getInstitutionEvents])
+  [getInstitutionEvents])
 
   return (
     <EventContext.Provider value={{
@@ -214,6 +220,7 @@ export function EventProvider({ children }) {
       resolveModeration,
       getInstitutionEvents,
       getDrafts,
+      incrementAttendees,
     }}>
       {children}
     </EventContext.Provider>

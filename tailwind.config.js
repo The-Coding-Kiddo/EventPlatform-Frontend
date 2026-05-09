@@ -7,30 +7,28 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50:  '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-        },
+        primary:      '#3B5F82',
+        primaryLight: '#7AAFC7',
+        secondary:    '#7AAFC7',
+        muted:        '#4A6070',
+        dark:         '#1A2E3E',
+        light:        '#EDF4F9',
+        success:      '#10B981',
+        warning:      '#F59E0B',
+        danger:       '#EF4444',
         surface: {
-          DEFAULT: '#f9fafb',
-          card:    '#ffffff',
-          border:  '#e5e7eb',
-        }
+          DEFAULT: '#EDF4F9',
+          card:    '#FFFFFF',
+          border:  '#C8D8E4',
+        },
       },
       fontFamily: {
-        sans: ['Inter Variable', 'Inter', 'system-ui', 'sans-serif'],
+        sans:    ['Satoshi', 'system-ui', 'sans-serif'],
+        display: ['Clash Display', 'system-ui', 'sans-serif'],
       },
       animation: {
-        'fade-in': 'fadeIn 0.4s ease-out',
-        'slide-up': 'slideUp 0.4s ease-out',
+        'fade-in':    'fadeIn 0.4s ease-out',
+        'slide-up':   'slideUp 0.4s ease-out',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4,0,0.6,1) infinite',
       },
       keyframes: {

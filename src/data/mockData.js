@@ -296,7 +296,7 @@ export const mockAnalytics = {
   ],
   categoryDistribution: [
     { category: 'Technology', count: 284, color: '#6366f1' },
-    { category: 'Music', count: 198, color: '#8b5cf6' },
+    { category: 'Music', count: 198, color: '#7AAFC7' },
     { category: 'Arts & Culture', count: 167, color: '#ec4899' },
     { category: 'Sports', count: 203, color: '#06b6d4' },
     { category: 'Business', count: 156, color: '#10b981' },

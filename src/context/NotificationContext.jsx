@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import {
   fetchNotifications,
   markNotificationRead,
@@ -7,7 +7,6 @@ import {
 } from '../services/notificationService'
 import { USE_MOCK } from '../services/apiClient'
 import { storageGet, storageSet } from '../utils/storage'
-import { useAuth } from './AuthContext'
 
 const NotificationContext = createContext({
   notifications: [],
@@ -19,22 +18,31 @@ const NotificationContext = createContext({
 })
 
 export function NotificationProvider({ children }) {
-  const { user } = useAuth()
-  // Seed from localStorage if present; otherwise fetch from service on mount.
-  const [notifications, setNotifications] = useState(() => storageGet('notifications') ?? [])
+  // In mock mode seed from localStorage; in real mode always fetch fresh.
+  const [notifications, setNotifications] = useState(() => USE_MOCK ? (storageGet('notifications') ?? []) : [])
 
-  // ── Load on mount — only if nothing is in localStorage yet ──────
-  useEffect(() => {
-    if (USE_MOCK && storageGet('notifications') !== null) return   // already restored
+  const loadNotifications = useCallback(() => {
     fetchNotifications()
-      .then(data => setNotifications(data))
+      .then(data => { if (Array.isArray(data)) setNotifications(data) })
       .catch(() => {/* silently fail — notifications are non-critical */})
   }, [])
 
-  // ── Persist whenever notifications change ───────────────────────
-  useEffect(() => { 
-    if (USE_MOCK) storageSet('notifications', notifications) 
-  }, [notifications])
+  // ── Load on mount ────────────────────────────────────────────────
+  useEffect(() => {
+    if (USE_MOCK && storageGet('notifications') !== null) return  // already restored from localStorage
+    loadNotifications()
+  }, [loadNotifications])
+
+  // ── Re-fetch after login (real mode only) ────────────────────────
+  useEffect(() => {
+    if (USE_MOCK) return
+    const handleLogin = () => loadNotifications()
+    window.addEventListener('auth:login', handleLogin)
+    return () => window.removeEventListener('auth:login', handleLogin)
+  }, [loadNotifications])
+
+  // ── Persist whenever notifications change (mock mode only) ───────
+  useEffect(() => { if (USE_MOCK) storageSet('notifications', notifications) }, [notifications])
 
   /**
    * Add a new notification (called internally from EventContext after moderation).
@@ -86,30 +94,26 @@ export function NotificationProvider({ children }) {
    *   - forRole === 'citizen' → only if forCategory matches a user subscription (or unset)
    *   - forRole === 'institution_admin' → only if forInstitution matches (or unset)
    */
-  const getNotificationsForUser = useCallback((u) => {
-    if (!u) return []
+  const getNotificationsForUser = useCallback((user) => {
+    if (!user) return []
     return notifications.filter(n => {
       if (!n.forRole) return true
-      if (n.forRole !== u.role) return false
+      if (n.forRole !== user.role) return false
       if (n.forRole === 'institution_admin') {
-        return !n.forInstitution || n.forInstitution === u.institution
+        return !n.forInstitution || n.forInstitution === user.institution
       }
       if (n.forRole === 'citizen') {
-        return !n.forCategory || u.subscriptions?.includes(n.forCategory)
+        return !n.forCategory || user.subscriptions?.includes(n.forCategory)
       }
       return true
     })
   }, [notifications])
 
-  const filteredNotifications = useMemo(() => {
-    return getNotificationsForUser(user)
-  }, [getNotificationsForUser, user])
-
-  const unreadCount = filteredNotifications.filter(n => !n.read).length
+  const unreadCount = notifications.filter(n => !n.read).length
 
   return (
     <NotificationContext.Provider value={{
-      notifications: filteredNotifications,
+      notifications,
       addNotification,
       markRead,
       markAllRead,

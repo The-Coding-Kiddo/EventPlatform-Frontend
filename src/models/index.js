@@ -276,6 +276,9 @@ export function normalizeEventPayload(formData) {
     updatedAt,
     // Strip form-UI state that must never reach the data layer
     tagInput,
+    // Strip frontend-only field not accepted by backend DTO
+    organizer,
+    status,
     // Keep everything else
     ...rest
   } = formData
@@ -283,7 +286,7 @@ export function normalizeEventPayload(formData) {
   return {
     ...rest,
     // Always populate institution — fall back to organizer if the form didn't set it.
-    institution: rest.institution || rest.organizer || '',
+    institution: rest.institution || organizer || '',
     // Coerce numeric strings coming from form inputs
     price:    Number(rest.price)    || 0,
     capacity: Number(rest.capacity) || 0,
@@ -296,6 +299,5 @@ export function normalizeEventPayload(formData) {
     description: rest.description?.trim() ?? '',
     location:    rest.location?.trim()    ?? '',
     venue:       rest.venue?.trim()       ?? '',
-    organizer:   rest.organizer?.trim()   ?? '',
   }
 }

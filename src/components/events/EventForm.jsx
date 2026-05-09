@@ -12,12 +12,10 @@ const INITIAL = {
   tags: [], tagInput: '', image: '',
 }
 
-// ── Defined OUTSIDE EventForm so React never treats it as a new type on re-render.
-// Keeping it inside would cause all inputs to unmount/remount on every keystroke.
 function Field({ label, error, children, required }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+      <label className="mb-1.5 block text-sm font-semibold text-[#1A2E3E]">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       {children}
@@ -26,13 +24,13 @@ function Field({ label, error, children, required }) {
   )
 }
 
+const inputClass = "w-full rounded-2xl border border-[#C8D8E4] bg-white px-4 py-3 text-sm text-[#1A2E3E] outline-none transition placeholder-[#8AABBD] focus:border-[#7AAFC7] focus:ring-4 focus:ring-[#7AAFC7]/10"
+const sectionClass = "space-y-4 rounded-3xl border border-[#C8D8E4] bg-white p-7 shadow-sm"
+
 export default function EventForm({ onSubmit, onCancel }) {
   const { user } = useAuth()
   const { submitEvent, saveDraft } = useEvents()
-  const [form, setForm] = useState({
-    ...INITIAL,
-    institution: user?.institution || '',
-  })
+  const [form, setForm] = useState({ ...INITIAL, institution: user?.institution || '' })
   const [submitted,    setSubmitted]    = useState(false)
   const [draftSaved,   setDraftSaved]   = useState(false)
   const [modResult,    setModResult]    = useState(null)
@@ -41,17 +39,13 @@ export default function EventForm({ onSubmit, onCancel }) {
   const [submitError,  setSubmitError]  = useState('')
 
   const fileInputRef = useRef(null)
-
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-
     const reader = new FileReader()
-    reader.onload = () => {
-      set('image', String(reader.result || ''))
-    }
+    reader.onload = () => set('image', String(reader.result || ''))
     reader.readAsDataURL(file)
   }
 
@@ -75,9 +69,9 @@ export default function EventForm({ onSubmit, onCancel }) {
     setIsSubmitting(true)
     setSubmitError('')
     try {
-      const rawData  = { ...form, institution: form.institution || user?.institution || '' }
-      const payload  = normalizeEventPayload(rawData)
-      const result   = await submitEvent(payload)
+      const rawData = { ...form, institution: form.institution || user?.institution || '' }
+      const payload = normalizeEventPayload(rawData)
+      const result  = await submitEvent(payload)
       setModResult(result.moderation)
       setSubmitted(true)
       onSubmit?.(result.event)
@@ -98,19 +92,12 @@ export default function EventForm({ onSubmit, onCancel }) {
   const removeTag = (tag) => set('tags', form.tags.filter(t => t !== tag))
 
   const handleSaveDraft = async () => {
-    // Only require a title for drafts — all other fields can be filled in later.
-    if (!form.title.trim()) {
-      setErrors({ title: 'Title is required to save a draft' })
-      return
-    }
+    if (!form.title.trim()) { setErrors({ title: 'Title is required to save a draft' }); return }
     setErrors({})
     setIsSubmitting(true)
     setSubmitError('')
     try {
-      const rawData = {
-        ...form,
-        institution: form.institution || user?.institution || '',
-      }
+      const rawData = { ...form, institution: form.institution || user?.institution || '' }
       const payload = normalizeEventPayload(rawData)
       await saveDraft(payload)
       setDraftSaved(true)
@@ -124,17 +111,17 @@ export default function EventForm({ onSubmit, onCancel }) {
   if (draftSaved) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mb-4">
-          <FileText size={28} className="text-blue-500" />
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#EDF4F9]">
+          <FileText size={28} className="text-[#7AAFC7]" />
         </div>
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">Draft Saved</h3>
-        <p className="text-gray-600 max-w-md mb-8">
-          <span className="text-gray-900 font-medium">"{form.title}"</span> has been saved as a draft. You can find it in your dashboard and submit it for review whenever you're ready.
+        <h3 className="mb-2 text-2xl font-bold text-[#1A2E3E]">Draft Saved</h3>
+        <p className="mb-8 max-w-md text-[#4A6070]">
+          <span className="font-medium text-[#1A2E3E]">"{form.title}"</span> has been saved as a draft. You can find it in your dashboard and submit it for review whenever you're ready.
         </p>
         <div className="flex gap-3">
           <button
-            onClick={() => { setDraftSaved(false) }}
-            className="btn-secondary"
+            onClick={() => setDraftSaved(false)}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#C8D8E4] bg-white px-5 py-3 text-sm font-bold text-[#4A6070] shadow-sm transition hover:border-[#7AAFC7] hover:bg-[#EDF4F9] hover:text-[#3B5F82]"
           >
             Continue Editing
           </button>
@@ -149,18 +136,18 @@ export default function EventForm({ onSubmit, onCancel }) {
   if (submitted) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mb-4">
-          <AlertTriangle size={28} className="text-amber-400" />
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#EDF4F9]">
+          <AlertTriangle size={28} className="text-[#7AAFC7]" />
         </div>
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">Event Submitted for Review</h3>
-        <p className="text-gray-600 max-w-md mb-1">
-          Your event <span className="text-gray-900 font-medium">"{form.title}"</span> has been submitted and is now undergoing automated risk analysis and validation.
+        <h3 className="mb-2 text-2xl font-bold text-[#1A2E3E]">Event Submitted for Review</h3>
+        <p className="mb-1 max-w-md text-[#4A6070]">
+          Your event <span className="font-medium text-[#1A2E3E]">"{form.title}"</span> has been submitted and is now undergoing automated risk analysis and validation.
         </p>
-        <p className="text-gray-500 text-sm mb-8">Typical review time: 2–24 hours</p>
+        <p className="mb-8 text-sm text-[#8AABBD]">Typical review time: 2–24 hours</p>
         <div className="flex flex-col gap-3 w-full max-w-xs">
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-50 border border-blue-200">
-            <CheckCircle size={16} className="text-blue-600" />
-            <span className="text-sm text-gray-600">Submission received</span>
+          <div className="flex items-center gap-3 rounded-xl border border-[#C8D8E4] bg-[#EDF4F9] p-3">
+            <CheckCircle size={16} className="text-[#7AAFC7]" />
+            <span className="text-sm text-[#4A6070]">Submission received</span>
           </div>
           {modResult && (
             <div className={`flex items-center gap-3 p-3 rounded-xl border ${
@@ -170,10 +157,9 @@ export default function EventForm({ onSubmit, onCancel }) {
             }`}>
               <CheckCircle size={16} className={
                 modResult.riskLevel === 'high'   ? 'text-red-500' :
-                modResult.riskLevel === 'medium' ? 'text-amber-500' :
-                                                   'text-emerald-500'
+                modResult.riskLevel === 'medium' ? 'text-amber-500' : 'text-emerald-500'
               } />
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-[#4A6070]">
                 Risk analysis complete — {modResult.riskLevel} risk ({modResult.riskScore}/100)
               </span>
             </div>
@@ -181,26 +167,21 @@ export default function EventForm({ onSubmit, onCancel }) {
           {!modResult && (
             <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
               <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-              <span className="text-sm text-gray-600">Risk analysis in progress</span>
+              <span className="text-sm text-[#4A6070]">Risk analysis in progress</span>
             </div>
           )}
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
-            <div className="w-4 h-4 rounded-full border-2 border-gray-300" />
-            <span className="text-sm text-gray-400">Moderation review</span>
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-[#EDF4F9] border border-[#C8D8E4]">
+            <div className="w-4 h-4 rounded-full border-2 border-[#C8D8E4]" />
+            <span className="text-sm text-[#8AABBD]">Moderation review</span>
           </div>
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
-            <div className="w-4 h-4 rounded-full border-2 border-gray-300" />
-            <span className="text-sm text-gray-400">Publication</span>
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-[#EDF4F9] border border-[#C8D8E4]">
+            <div className="w-4 h-4 rounded-full border-2 border-[#C8D8E4]" />
+            <span className="text-sm text-[#8AABBD]">Publication</span>
           </div>
         </div>
         <button
-          onClick={() => {
-            setSubmitted(false)
-            setDraftSaved(false)
-            setModResult(null)
-            setForm({ ...INITIAL, institution: user?.institution || '' })
-          }}
-          className="btn-secondary mt-8"
+          onClick={() => { setSubmitted(false); setDraftSaved(false); setModResult(null); setForm({ ...INITIAL, institution: user?.institution || '' }) }}
+          className="mt-8 inline-flex items-center justify-center gap-2 rounded-2xl border border-[#C8D8E4] bg-white px-5 py-3 text-sm font-bold text-[#4A6070] shadow-sm transition hover:border-[#7AAFC7] hover:bg-[#EDF4F9] hover:text-[#3B5F82]"
         >
           Submit Another Event
         </button>
@@ -211,141 +192,123 @@ export default function EventForm({ onSubmit, onCancel }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Info */}
-      <div className="card p-6 space-y-4">
-        <h3 className="font-semibold text-gray-900 text-base">Basic Information</h3>
+      <div className={sectionClass}>
+        <h3 className="text-base font-extrabold text-[#1A2E3E]">Basic Information</h3>
         <Field label="Event Title" error={errors.title} required>
-          <input className="input" placeholder="e.g. Annual Tech Conference 2026" value={form.title} onChange={e => set('title', e.target.value)} />
+          <input className={inputClass} placeholder="e.g. Annual Tech Conference 2026" value={form.title} onChange={e => set('title', e.target.value)} />
         </Field>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Category" error={errors.category} required>
-            <select className="input" value={form.category} onChange={e => set('category', e.target.value)}>
+            <select className={inputClass} value={form.category} onChange={e => set('category', e.target.value)}>
               <option value="">Select category</option>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </Field>
           <Field label="Institution">
-            <input className="input bg-gray-50" value={form.institution} readOnly />
+            <input className="w-full rounded-2xl border border-[#C8D8E4] bg-[#EDF4F9] px-4 py-3 text-sm text-[#4A6070] outline-none" value={form.institution} readOnly />
           </Field>
         </div>
         <Field label="Description" error={errors.description} required>
           <textarea
-            className="input resize-none"
+            className={inputClass + ' resize-none'}
             rows={4}
             placeholder="Describe your event in detail (min. 50 characters)..."
             value={form.description}
             onChange={e => set('description', e.target.value)}
           />
-          <p className="text-xs text-gray-400 mt-1">{form.description.length} characters</p>
+          <p className="mt-1 text-xs text-[#8AABBD]">{form.description.length} characters</p>
         </Field>
       </div>
 
       {/* Date & Location */}
-      <div className="card p-6 space-y-4">
-        <h3 className="font-semibold text-gray-900 text-base">Date & Location</h3>
+      <div className={sectionClass}>
+        <h3 className="text-base font-extrabold text-[#1A2E3E]">Date & Location</h3>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Date" error={errors.date} required>
-            <input type="date" className="input" value={form.date} onChange={e => set('date', e.target.value)} min="2026-04-19" />
+            <input type="date" className={inputClass} value={form.date} onChange={e => set('date', e.target.value)} min="2026-04-19" />
           </Field>
           <Field label="Time">
-            <input type="time" className="input" value={form.time} onChange={e => set('time', e.target.value)} />
+            <input type="time" className={inputClass} value={form.time} onChange={e => set('time', e.target.value)} />
           </Field>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="City" error={errors.location} required>
-            <select className="input" value={form.location} onChange={e => set('location', e.target.value)}>
+            <select className={inputClass} value={form.location} onChange={e => set('location', e.target.value)}>
               <option value="">Select city</option>
               {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </Field>
           <Field label="Venue Name" error={errors.venue} required>
-            <input className="input" placeholder="e.g. Convention Center Hall A" value={form.venue} onChange={e => set('venue', e.target.value)} />
+            <input className={inputClass} placeholder="e.g. Convention Center Hall A" value={form.venue} onChange={e => set('venue', e.target.value)} />
           </Field>
         </div>
       </div>
 
       {/* Capacity & Pricing */}
-      <div className="card p-6 space-y-4">
-        <h3 className="font-semibold text-gray-900 text-base">Capacity & Pricing</h3>
+      <div className={sectionClass}>
+        <h3 className="text-base font-extrabold text-[#1A2E3E]">Capacity & Pricing</h3>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Capacity" error={errors.capacity} required>
-            <input type="number" className="input" placeholder="e.g. 500" min="1" value={form.capacity} onChange={e => set('capacity', e.target.value)} />
+            <input type="number" className={inputClass} placeholder="e.g. 500" min="1" value={form.capacity} onChange={e => set('capacity', e.target.value)} />
           </Field>
           <Field label="Ticket Price ($)" error={errors.price}>
-            <input type="number" className="input" placeholder="0 for free" min="0" step="0.01" value={form.price} onChange={e => set('price', e.target.value)} />
+            <input type="number" className={inputClass} placeholder="0 for free" min="0" step="0.01" value={form.price} onChange={e => set('price', e.target.value)} />
           </Field>
         </div>
       </div>
 
       {/* Media & Tags */}
-      <div className="card p-6 space-y-4">
-        <h3 className="font-semibold text-gray-900 text-base">Media & Tags</h3>
+      <div className={sectionClass}>
+        <h3 className="text-base font-extrabold text-[#1A2E3E]">Media & Tags</h3>
         <Field label="Event Image">
           <div className="space-y-3">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
             <div className="flex items-center gap-3 flex-wrap">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="btn-secondary"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#C8D8E4] bg-white px-5 py-3 text-sm font-bold text-[#4A6070] shadow-sm transition hover:border-[#7AAFC7] hover:bg-[#EDF4F9] hover:text-[#3B5F82]"
               >
                 <Upload size={15} /> Upload Image
               </button>
-
               {form.image && (
                 <button
                   type="button"
-                  onClick={() => {
-                    set('image', '')
-                    if (fileInputRef.current) fileInputRef.current.value = ''
-                  }}
-                  className="btn-secondary"
+                  onClick={() => { set('image', ''); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#C8D8E4] bg-white px-5 py-3 text-sm font-bold text-[#4A6070] shadow-sm transition hover:border-[#7AAFC7] hover:bg-[#EDF4F9] hover:text-[#3B5F82]"
                 >
                   <X size={14} /> Remove Image
                 </button>
               )}
             </div>
-
             {form.image && (
-              <div className="w-full max-w-sm rounded-2xl overflow-hidden border border-gray-200 bg-gray-50">
+              <div className="w-full max-w-sm rounded-2xl overflow-hidden border border-[#C8D8E4] bg-[#EDF4F9]">
                 <img src={form.image} alt="Event preview" className="w-full h-48 object-cover" />
               </div>
             )}
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Or paste image URL</label>
-              <input
-                className="input"
-                placeholder="https://example.com/image.jpg"
-                value={form.image}
-                onChange={e => set('image', e.target.value)}
-              />
+              <label className="mb-1.5 block text-sm font-semibold text-[#1A2E3E]">Or paste image URL</label>
+              <input className={inputClass} placeholder="https://example.com/image.jpg" value={form.image} onChange={e => set('image', e.target.value)} />
             </div>
           </div>
         </Field>
         <Field label="Tags">
           <div className="flex gap-2">
             <input
-              className="input"
+              className={inputClass}
               placeholder="Add a tag and press Enter"
               value={form.tagInput}
               onChange={e => set('tagInput', e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag() } }}
             />
-            <button type="button" onClick={addTag} className="btn-secondary shrink-0">
+            <button type="button" onClick={addTag} className="shrink-0 rounded-2xl border border-[#C8D8E4] bg-[#EDF4F9] px-5 text-[#3B5F82] transition hover:bg-[#C8D8E4]">
               <Plus size={14} />
             </button>
           </div>
           {form.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
               {form.tags.map(tag => (
-                <span key={tag} className="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200">
+                <span key={tag} className="flex items-center gap-1 rounded-full border border-[#7AAFC7] px-3 py-1 text-xs font-semibold text-[#3B5F82]" style={{ background: 'rgba(122,175,199,0.15)' }}>
                   {tag}
                   <button type="button" onClick={() => removeTag(tag)} className="hover:text-red-400 transition-colors">
                     <X size={10} />
@@ -358,35 +321,36 @@ export default function EventForm({ onSubmit, onCancel }) {
       </div>
 
       {/* Disclaimer */}
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200">
-        <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-        <p className="text-sm text-amber-700">
+      <div className="flex items-start gap-3 rounded-2xl border border-[#C8D8E4] bg-[#EDF4F9] p-4">
+        <AlertTriangle size={16} className="mt-0.5 shrink-0 text-[#7AAFC7]" />
+        <p className="text-sm font-medium text-[#4A6070]">
           Your event will undergo automated risk analysis and manual moderation review before publication. Events with high risk scores will be escalated to the Manual Review Queue.
         </p>
       </div>
 
       {submitError && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-xl">
-          {submitError}
-        </p>
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-xl">{submitError}</p>
       )}
 
       <div className="flex items-center gap-3 justify-end flex-wrap">
         {onCancel && (
-          <button type="button" onClick={onCancel} disabled={isSubmitting} className="btn-secondary">Cancel</button>
+          <button type="button" onClick={onCancel} disabled={isSubmitting} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#C8D8E4] bg-white px-5 py-3 text-sm font-bold text-[#4A6070] shadow-sm transition hover:border-[#7AAFC7] hover:bg-[#EDF4F9] hover:text-[#3B5F82]">Cancel</button>
         )}
-        {/* Save as Draft — persists the event as status:'draft' visible in the Drafts tab */}
         <button
           type="button"
           onClick={handleSaveDraft}
           disabled={isSubmitting}
-          className="btn-secondary"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#C8D8E4] bg-white px-5 py-3 text-sm font-bold text-[#4A6070] shadow-sm transition hover:border-[#7AAFC7] hover:bg-[#EDF4F9] hover:text-[#3B5F82]"
         >
           <FileText size={15} /> Save as Draft
         </button>
-        <button type="submit" disabled={isSubmitting} className="btn-primary">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#7AAFC7] hover:bg-[#3B5F82] px-6 py-3 text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-70"
+        >
           {isSubmitting ? (
-            <><div className="w-4 h-4 border-2 border-blue-300 border-t-white rounded-full animate-spin" /> Submitting…</>
+            <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Submitting…</>
           ) : (
             <><Upload size={15} /> Submit for Review</>
           )}

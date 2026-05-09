@@ -10,7 +10,7 @@
  * so flipping that flag is the only change needed to go live.
  */
 
-export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 /**
  * USE_MOCK — true while no backend is available.
@@ -62,7 +62,14 @@ async function request(method, path, { body, params } = {}) {
   }
 
   if (!res.ok) {
-    throw new ApiError(data?.message || `Request failed (${res.status})`, res.status, data)
+    const msg = data?.message
+    const msgStr = Array.isArray(msg) ? msg.join(', ') : (msg || `Request failed (${res.status})`)
+    throw new ApiError(msgStr, res.status, data)
+  }
+
+  // Unwrap the global { success, data, timestamp } envelope used by the backend
+  if (data && typeof data === 'object' && data.success === true && 'data' in data) {
+    return data.data
   }
 
   return data

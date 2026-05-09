@@ -94,28 +94,29 @@ function InstitutionAdminDashboard({ user }) {
   ]
 
   const overviewStats = [
-    { label: 'Published Events', value: published.length,         icon: CheckCircle, color: 'text-emerald-600 bg-emerald-50' },
-    { label: 'Pending Review',   value: pending.length,           icon: AlertTriangle, color: 'text-amber-600  bg-amber-50'  },
-    { label: 'Drafts',           value: drafts.length,            icon: FileText,    color: 'text-blue-600   bg-blue-50'    },
-    { label: 'Registrations',    value: totalRegistrations.toLocaleString(), icon: Users, color: 'text-violet-600 bg-violet-50' },
+    { label: 'Published Events', value: published.length, icon: CheckCircle },
+    { label: 'Pending Review', value: pending.length, icon: AlertTriangle },
+    { label: 'Drafts', value: drafts.length, icon: FileText },
+    { label: 'Registrations', value: totalRegistrations.toLocaleString(), icon: Users },
   ]
 
   return (
-    <div className="min-h-screen pt-24 pb-16 px-4">
+    <div className="min-h-screen bg-[#EDF4F9] px-4 pt-24 pb-16">
       <div className={`max-w-6xl mx-auto grid grid-cols-1 ${sidebarCollapsed ? 'lg:grid-cols-[92px,1fr]' : 'lg:grid-cols-[280px,1fr]'} gap-6`}>
 
         {/* ── Sidebar ── */}
         <aside className="lg:sticky lg:top-24 h-fit">
-          <div className={`card transition-all duration-200 ${sidebarCollapsed ? 'p-3' : 'p-5'}`}>
+          <div className={`rounded-3xl border border-[#C8D8E4] bg-white shadow-xl  transition-all duration-200 ${sidebarCollapsed ? 'p-3' : 'p-5'}`}>
             <div className={`flex items-center ${sidebarCollapsed ? 'justify-center mb-2' : 'justify-between mb-4'}`}>
               {!sidebarCollapsed && (
                 <div>
-                  <p className="text-sm font-semibold text-gray-700">Admin Panel</p>
+                  <p className="text-sm font-bold text-[#1A2E3E]">Admin Panel</p>
+                  <p className="text-xs text-[#4A6070]">Institution workspace</p>
                 </div>
               )}
               <button
                 onClick={() => setSidebarCollapsed(prev => !prev)}
-                className="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-9 h-9 rounded-xl border border-[#C8D8E4] bg-white flex items-center justify-center text-[#4A6070] transition-colors hover:border-[#7AAFC7] hover:bg-[#EDF4F9] hover:text-[#3B5F82]"
                 aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               >
@@ -129,8 +130,8 @@ function InstitutionAdminDashboard({ user }) {
                   const isActive = item.tab ? activeTab === item.tab : false
                   const cls = `w-full h-11 rounded-xl flex items-center justify-center transition-all ${
                     isActive
-                      ? 'bg-gray-100 text-gray-900 border border-gray-200'
-                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-[#EDF4F9] text-[#3B5F82] border border-[#C8D8E4] shadow-sm'
+                      : 'text-[#4A6070] hover:bg-[#EDF4F9] hover:text-[#3B5F82]'
                   }`
 
                   return item.href ? (
@@ -160,11 +161,11 @@ function InstitutionAdminDashboard({ user }) {
                         onClick={() => setActiveTab(group.tab)}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                           isActive
-                            ? 'bg-gray-100 text-gray-900 border-l-2 border-brand-600'
-                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                            ? 'bg-[#EDF4F9] text-[#3B5F82] border-l-2 border-[#3B5F82] shadow-sm'
+                            : 'text-[#4A6070] hover:bg-[#EDF4F9] hover:text-[#3B5F82]'
                         }`}
                       >
-                        <group.icon size={16} className={isActive ? 'text-gray-900' : 'text-gray-400'} />
+                        <group.icon size={16} className={isActive ? 'text-[#3B5F82]' : 'text-slate-400'} />
                         <span>{group.label}</span>
                       </button>
                     )
@@ -183,7 +184,7 @@ function InstitutionAdminDashboard({ user }) {
                       <button
                         onClick={toggleGroup}
                         className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-colors mt-1 ${
-                          hasActiveChild ? 'text-brand-600' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                          hasActiveChild ? 'text-[#3B5F82]' : 'text-slate-400 hover:text-[#3B5F82] hover:bg-[#EDF4F9]'
                         }`}
                       >
                         <span className="text-xs font-bold uppercase tracking-wider">{group.label}</span>
@@ -199,12 +200,12 @@ function InstitutionAdminDashboard({ user }) {
                             const isActive = activeTab === child.tab && !child.href
                             const cls = `w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                               isActive
-                                ? 'bg-gray-100 text-gray-900 border-l-2 border-brand-600'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                ? 'bg-[#EDF4F9] text-[#3B5F82] border-l-2 border-[#3B5F82] shadow-sm'
+                                : 'text-[#4A6070] hover:bg-[#EDF4F9] hover:text-[#3B5F82]'
                             }`
                             return child.href ? (
                               <Link key={child.id} to={child.href} className={cls}>
-                                <child.icon size={15} className="text-gray-400" />
+                                <child.icon size={15} className="text-slate-400" />
                                 <span>{child.label}</span>
                                 {typeof navCounts[child.countKey] === 'number' && (
                                   <span className="ml-auto text-xs font-semibold text-gray-400">{navCounts[child.countKey]}</span>
@@ -212,7 +213,7 @@ function InstitutionAdminDashboard({ user }) {
                               </Link>
                             ) : (
                               <button key={child.id} onClick={() => setActiveTab(child.tab)} className={cls}>
-                                <child.icon size={15} className={isActive ? 'text-gray-900' : 'text-gray-400'} />
+                                <child.icon size={15} className={isActive ? 'text-[#3B5F82]' : 'text-slate-400'} />
                                 <span>{child.label}</span>
                                 {typeof navCounts[child.countKey] === 'number' && (
                                   <span className={`ml-auto text-xs font-semibold ${isActive ? 'text-gray-900/90' : 'text-gray-400'}`}>{navCounts[child.countKey]}</span>
@@ -233,8 +234,8 @@ function InstitutionAdminDashboard({ user }) {
         {/* ── Main content ── */}
         <main className="min-w-0">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">{activeTab}</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <h2 className="text-3xl font-extrabold text-[#1A2E3E]">{activeTab}</h2>
+            <p className="text-sm text-[#4A6070] mt-1">
               {activeTab === 'Overview'      && `Management workspace for ${user.institution}`}
               {activeTab === 'Events'        && 'Events published or submitted by your institution'}
               {activeTab === 'Drafts'        && 'Saved drafts waiting to be submitted'}
@@ -249,7 +250,7 @@ function InstitutionAdminDashboard({ user }) {
             <div className="space-y-5">
               {/* Stats row */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {overviewStats.map(({ label, value, icon: Icon, color }) => {
+                {overviewStats.map(({ label, value, icon: Icon }) => {
                   const handleClick = () => {
                     if (label === 'Published Events') setActiveTab('Events')
                     if (label === 'Pending Review') setActiveTab('Events')
@@ -261,13 +262,13 @@ function InstitutionAdminDashboard({ user }) {
                     <button
                       key={label}
                       onClick={handleClick}
-                      className="card p-4 text-left hover:border-blue-200 hover:shadow-sm transition-all"
+                      className="rounded-3xl border border-[#C8D8E4] bg-white p-5 text-left shadow-sm  transition-all hover:-translate-y-0.5 hover:shadow-xl hover:"
                     >
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${color}`}>
+                      <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4 bg-[#EDF4F9] text-[#3B5F82]">
                         <Icon size={16} />
                       </div>
-                      <p className="text-2xl font-black text-gray-900">{value}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+                      <p className="text-3xl font-black text-[#1A2E3E]">{value}</p>
+                      <p className="text-sm text-[#4A6070] mt-1">{label}</p>
                     </button>
                   )
                 })}
@@ -276,9 +277,9 @@ function InstitutionAdminDashboard({ user }) {
               {/* Recent events & activity */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {/* My recent events */}
-                <div className="card p-5">
+                <div className="rounded-3xl border border-[#C8D8E4] bg-white p-6 shadow-sm ">
                   <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-sm">
-                    <Calendar size={14} className="text-blue-600" /> Recent Events
+                    <Calendar size={14} className="text-[#7AAFC7]" /> Recent Events
                   </h3>
                   {myEvents.length === 0 ? (
                     <p className="text-sm text-gray-400">No events yet.</p>
@@ -297,15 +298,15 @@ function InstitutionAdminDashboard({ user }) {
                       ))}
                     </div>
                   )}
-                  <button onClick={() => setActiveTab('Events')} className="mt-4 text-xs text-blue-600 hover:text-blue-700 font-semibold">
+                  <button onClick={() => setActiveTab('Events')} className="mt-4 text-xs text-[#7AAFC7] hover:text-[#3B5F82] font-semibold">
                     View all →
                   </button>
                 </div>
 
                 {/* Recent drafts */}
-                <div className="card p-5">
+                <div className="rounded-3xl border border-[#C8D8E4] bg-white p-6 shadow-sm ">
                   <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-sm">
-                    <FileText size={14} className="text-blue-600" /> Recent Drafts
+                    <FileText size={14} className="text-[#7AAFC7]" /> Recent Drafts
                   </h3>
                   {drafts.length === 0 ? (
                     <div>
@@ -331,19 +332,19 @@ function InstitutionAdminDashboard({ user }) {
                       })}
                     </div>
                   )}
-                  <button onClick={() => setActiveTab('Drafts')} className="mt-4 text-xs text-blue-600 hover:text-blue-700 font-semibold">
+                  <button onClick={() => setActiveTab('Drafts')} className="mt-4 text-xs text-[#7AAFC7] hover:text-[#3B5F82] font-semibold">
                     View all →
                   </button>
                 </div>
               </div>
 
               {/* Publish CTA */}
-              <div className="card p-5 flex items-center justify-between gap-4 bg-blue-50 border-blue-100">
+              <div className="rounded-3xl border border-[#C8D8E4] bg-[#EDF4F9] p-6 flex items-center justify-between gap-4 shadow-sm ">
                 <div>
                   <p className="font-semibold text-gray-900">Ready to publish a new event?</p>
                   <p className="text-sm text-gray-500 mt-0.5">Submit it for review and reach thousands of attendees.</p>
                 </div>
-                <Link to="/publish" className="btn-primary shrink-0">
+                <Link to="/publish" className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#7AAFC7] hover:bg-[#3B5F82] px-5 py-3 text-sm font-bold text-white shadow-lg  transition hover:-translate-y-0.5 ">
                   <Plus size={14} /> New Event
                 </Link>
               </div>
@@ -364,7 +365,7 @@ function InstitutionAdminDashboard({ user }) {
                 <>
                   <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                     <span className="text-sm font-semibold text-gray-900">{myEvents.length} event{myEvents.length !== 1 ? 's' : ''}</span>
-                    <Link to="/publish" className="btn-primary text-xs py-1.5">
+                    <Link to="/publish" className="inline-flex items-center gap-1.5 rounded-lg bg-[#7AAFC7] hover:bg-[#3B5F82] px-3 py-1.5 text-xs font-bold text-white shadow-sm ">
                       <Plus size={13} /> New Event
                     </Link>
                   </div>
@@ -398,7 +399,7 @@ function InstitutionAdminDashboard({ user }) {
                             <td className="px-4 py-3.5 text-sm text-gray-600">{e.attendees.toLocaleString()}</td>
                             <td className="px-4 py-3.5">
                               <div className="flex items-center gap-3">
-                                <Link to={`/events/${e.id}`} className="text-blue-600 hover:text-blue-700 text-xs font-semibold">
+                                <Link to={`/events/${e.id}`} className="text-[#7AAFC7] hover:text-[#3B5F82] text-xs font-semibold">
                                   View →
                                 </Link>
                                 {(e.status === 'draft' || e.status === 'pending') && (
@@ -426,7 +427,7 @@ function InstitutionAdminDashboard({ user }) {
                   <FileText size={36} className="text-gray-300 mx-auto mb-3" />
                   <h3 className="font-bold text-gray-900 mb-1">No drafts yet</h3>
                   <p className="text-gray-500 text-sm mb-4">Start writing an event and save it as a draft to continue later</p>
-                  <Link to="/publish" className="btn-primary">Create Event</Link>
+                  <Link to="/publish" className="inline-flex items-center justify-center rounded-xl bg-[#7AAFC7] hover:bg-[#3B5F82] px-5 py-2.5 text-sm font-bold text-white shadow-md  transition ">Create Event</Link>
                 </div>
               )}
               {drafts.map(d => {
@@ -435,7 +436,7 @@ function InstitutionAdminDashboard({ user }) {
                   catch { return d.updatedAt }
                 })()
                 return (
-                  <div key={d.id} className="card p-4 flex items-center gap-4 hover:border-blue-200 transition-all">
+                  <div key={d.id} className="card p-4 flex items-center gap-4 hover:border-[#7AAFC7] transition-all">
                     <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
                       <FileText size={16} className="text-gray-400" />
                     </div>
@@ -456,7 +457,7 @@ function InstitutionAdminDashboard({ user }) {
                 )
               })}
               {drafts.length > 0 && (
-                <Link to="/publish" className="card p-4 flex items-center justify-center gap-2 text-sm text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-all border-dashed">
+                <Link to="/publish" className="card p-4 flex items-center justify-center gap-2 text-sm text-[#7AAFC7] hover:border-[#7AAFC7] hover:bg-[#EDF4F9] transition-all border-dashed">
                   <Plus size={15} /> Create new event
                 </Link>
               )}

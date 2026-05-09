@@ -8,7 +8,7 @@ export default function StatsCard({ label, value, sub, trend, icon: Icon, color 
     amber:   { bg: 'bg-amber-50',   icon: 'text-amber-600',   border: 'border-amber-200'   },
     red:     { bg: 'bg-red-50',     icon: 'text-red-600',     border: 'border-red-200'     },
     cyan:    { bg: 'bg-cyan-50',    icon: 'text-cyan-600',    border: 'border-cyan-200'    },
-    purple:  { bg: 'bg-purple-50',  icon: 'text-purple-600',  border: 'border-purple-200'  },
+    purple:  { bg: 'bg-[#EDF4F9]', icon: 'text-[#7AAFC7]',   border: 'border-[#C8D8E4]'   },
   }
   const c = colors[color]
   const TrendIcon = trend > 0 ? TrendingUp : trend < 0 ? TrendingDown : Minus

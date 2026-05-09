@@ -78,7 +78,7 @@ export default function AdminDashboard() {
   // Load users + analytics through the service layer on mount.
   // In mock mode the service reads in-memory data; in real mode it calls the API.
   useEffect(() => {
-    fetchUsers().then(setAllUsers).catch(err => console.error('[AdminDashboard] fetchUsers', err))
+    fetchUsers().then(data => setAllUsers(Array.isArray(data) ? data : data?.items ?? [])).catch(err => console.error('[AdminDashboard] fetchUsers', err))
     fetchAnalytics().then(setAnalytics).catch(err => console.error('[AdminDashboard] fetchAnalytics', err))
   }, [])
 
@@ -183,11 +183,41 @@ export default function AdminDashboard() {
     return true
   })
 
-  const roleColor   = { citizen: 'primary', institution_admin: 'cyan', super_admin: 'amber' }
+  const roleColor   = { citizen: 'primary', institution_admin: 'primary', super_admin: 'primary' }
   const statusColor = { active: 'success', suspended: 'danger' }
 
+  const safeCategoryDistribution = Array.isArray(a.categoryDistribution)
+    ? a.categoryDistribution
+        .map(item => ({
+          ...item,
+          label: item.label ?? item.name ?? item.category ?? 'Uncategorized',
+          name: item.name ?? item.label ?? item.category ?? 'Uncategorized',
+          value: Number(item.value ?? item.events ?? item.count ?? 0),
+        }))
+        .filter(item => item.value > 0)
+    : []
+
+  const safeMonthlyEvents = Array.isArray(a.monthlyEvents)
+    ? a.monthlyEvents.map(month => ({
+        ...month,
+        approved: Number(month.approved ?? 0),
+        rejected: Number(month.rejected ?? 0),
+        total: Number(month.total ?? month.events ?? month.count ?? 0),
+      }))
+    : []
+
+  const safeTopCities = Array.isArray(a.topCities)
+    ? a.topCities
+        .map(city => ({
+          ...city,
+          city: city.city ?? city.name ?? 'Unknown',
+          events: Number(city.events ?? city.count ?? 0),
+        }))
+        .filter(city => city.city && city.events > 0)
+    : []
+
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
+    <div className="min-h-screen bg-white pt-16">
       <div className="flex h-[calc(100vh-4rem)]">
 
         {/* ════════════════════════════════════════
@@ -197,12 +227,12 @@ export default function AdminDashboard() {
           {/* Sidebar header */}
           <div className="px-5 py-5 border-b border-gray-100">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm shadow-blue-600/30">
+              <div className="w-8 h-8 rounded-lg bg-[#7AAFC7] flex items-center justify-center shadow-sm ">
                 <Shield size={15} className="text-white" />
               </div>
               <div>
-                <p className="text-sm font-bold text-gray-900">Admin Panel</p>
-                <p className="text-xs text-gray-400">Super Administrator</p>
+                <p className="text-sm font-bold text-[#1A2E3E]">Super Admin</p>
+                <p className="text-xs text-[#4A6070]">Platform control center</p>
               </div>
             </div>
           </div>
@@ -219,13 +249,13 @@ export default function AdminDashboard() {
                     onClick={() => setActiveTab(group.tab)}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
                       isActive
-                        ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/20'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                        ? 'bg-[#7AAFC7] hover:bg-[#3B5F82] text-white shadow-sm '
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                   >
                     <group.icon size={16} className={isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-600'} />
                     <span className="flex-1 text-left">{group.label}</span>
-                    {isActive && <ChevronRight size={13} className="text-blue-200" />}
+                    {isActive && <ChevronRight size={13} className="text-gray-200" />}
                   </button>
                 )
               }
@@ -245,7 +275,7 @@ export default function AdminDashboard() {
                   <button
                     onClick={toggleGroup}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-colors mt-1 ${
-                      hasActiveChild ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                      hasActiveChild ? 'text-gray-700' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                     }`}
                   >
                     <span className="text-xs font-bold uppercase tracking-wider">{group.label}</span>
@@ -269,15 +299,15 @@ export default function AdminDashboard() {
                           <button
                             key={child.id}
                             onClick={handleClick}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
-                              isActive
-                                ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/20'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                            }`}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
+                            isActive
+                              ? 'bg-[#7AAFC7] hover:bg-[#3B5F82] text-white shadow-sm '
+                              : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                          }`}
                           >
                             <child.icon size={15} className={isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-600'} />
                             <span className="flex-1 text-left">{child.label}</span>
-                            {isActive && <ChevronRight size={13} className="text-blue-200" />}
+                            {isActive && <ChevronRight size={13} className="text-gray-200" />}
                           </button>
                         )
                       })}
@@ -294,10 +324,10 @@ export default function AdminDashboard() {
         ════════════════════════════════════════ */}
         <main className="flex-1 overflow-y-auto">
           {/* Top bar */}
-          <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">{activeTab}</h1>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <h1 className="text-2xl font-extrabold text-[#1A2E3E]">{activeTab}</h1>
+              <p className="mt-1 text-sm text-[#4A6070]">
                 {activeTab === 'Overview'     && 'Platform health and key metrics'}
                 {activeTab === 'Events'       && `${events.length} total events on the platform`}
                 {activeTab === 'Users'        && `${allUsers.length} registered users`}
@@ -307,7 +337,7 @@ export default function AdminDashboard() {
                 {activeTab === 'Institutions' && 'Verified partner institutions'}
               </p>
             </div>
-            <button className="btn-secondary text-sm py-2">
+            <button className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-[#7AAFC7] hover:bg-[#EDF4F9] hover:text-[#3B5F82]">
               <RefreshCw size={13} /> Refresh
             </button>
           </div>
@@ -320,52 +350,108 @@ export default function AdminDashboard() {
               <div className="space-y-6 animate-fade-in">
                 <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
                   <StatsCard label="Total Events"   value={a.totalEvents.toLocaleString()} trend={8.3}   icon={Calendar}      color="brand"   sub="All time"          onClick={() => navigateToEvents()} />
-                  <StatsCard label="Total Users"    value={`${(a.totalUsers / 1000).toFixed(1)}K`} trend={12.1} icon={Users} color="cyan" sub="Registered"         onClick={() => setActiveTab('Users')} />
-                  <StatsCard label="Institutions"   value={a.totalInstitutions} trend={5.4}            icon={Building2}     color="purple"  sub="Active"             onClick={() => setActiveTab('Institutions')} />
-                  <StatsCard label="This Month"     value={a.eventsThisMonth}   trend={-3.2}           icon={TrendingUp}    color="emerald" sub="Events published"   onClick={() => navigateToEvents('', true)} />
-                  <StatsCard label="Pending Review" value={a.pendingModeration}                        icon={AlertTriangle} color="amber"   sub="Moderation queue"   onClick={() => setActiveTab('Moderation')} />
-                  <StatsCard label="Approval Rate"  value={`${a.approvalRate}%`} trend={1.2}           icon={CheckCircle}   color="emerald" sub="Last 30 days" />
+                  <StatsCard label="Total Users"    value={a.totalUsers ? `${(a.totalUsers / 1000).toFixed(1)}K` : '0'} trend={12.1} icon={Users} color="brand" sub="Registered"         onClick={() => setActiveTab('Users')} />
+                  <StatsCard label="Institutions"   value={a.totalInstitutions} trend={5.4}            icon={Building2}     color="brand"  sub="Active"             onClick={() => setActiveTab('Institutions')} />
+                  <StatsCard label="This Month"     value={a.eventsThisMonth}   trend={-3.2}           icon={TrendingUp}    color="brand" sub="Events published"   onClick={() => navigateToEvents('', true)} />
+                  <StatsCard label="Pending Review" value={a.pendingModeration}                        icon={AlertTriangle} color="brand"   sub="Moderation queue"   onClick={() => setActiveTab('Moderation')} />
+                  <StatsCard label="Approval Rate"  value={`${Number(a.approvalRate) || 0}%`} trend={1.2}           icon={CheckCircle}   color="brand" sub="Last 30 days" />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                  <BarChart  data={a.monthlyEvents}        title="Monthly Event Activity" height={220} />
-                  <DonutChart data={a.categoryDistribution} title="Events by Category" />
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="mb-5 flex items-center justify-between gap-4">
+                      <div>
+                        <h3 className="text-base font-extrabold text-[#1A2E3E]">Monthly Event Activity</h3>
+                        <p className="mt-1 text-xs text-[#4A6070]">Approved and rejected events over time.</p>
+                      </div>
+                      <span className="rounded-xl border border-[#C8D8E4] bg-[#EDF4F9] px-3 py-1 text-xs font-bold text-[#3B5F82]">This Year</span>
+                    </div>
+                    {safeMonthlyEvents.length > 0 ? (
+                      <BarChart data={safeMonthlyEvents} title="" height={220} />
+                    ) : (
+                      <div className="flex h-[220px] items-center justify-center rounded-2xl border border-dashed border-[#7AAFC7] bg-[#EDF4F9]/40 text-sm text-[#4A6070]">
+                        No monthly activity data yet.
+                      </div>
+                    )}
+                  </div>
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="mb-5 flex items-center justify-between gap-4">
+                      <div>
+                        <h3 className="text-base font-extrabold text-[#1A2E3E]">Events by Category</h3>
+                        <p className="mt-1 text-xs text-[#4A6070]">Distribution will appear after category data is available.</p>
+                      </div>
+                      <span className="rounded-xl border border-[#C8D8E4] bg-[#EDF4F9] px-3 py-1 text-xs font-bold text-[#3B5F82]">Analytics</span>
+                    </div>
+
+                    {safeCategoryDistribution.length > 0 ? (
+                      <div className="space-y-4">
+                        {safeCategoryDistribution.map(item => {
+                          const total = safeCategoryDistribution.reduce((sum, row) => sum + Number(row.value || 0), 0)
+                          const percent = total > 0 ? Math.round((Number(item.value || 0) / total) * 100) : 0
+                          return (
+                            <div key={item.name || item.label}>
+                              <div className="mb-1 flex items-center justify-between text-sm">
+                                <span className="font-semibold text-slate-700">{item.name || item.label}</span>
+                                <span className="text-xs font-bold text-[#3B5F82]">{item.value} · {percent}%</span>
+                              </div>
+                              <div className="h-2 rounded-full bg-[#EDF4F9]">
+                                <div className="h-full rounded-full bg-[#7AAFC7] hover:bg-[#3B5F82]" style={{ width: `${percent}%` }} />
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="flex h-[260px] flex-col items-center justify-center rounded-2xl border border-dashed border-[#7AAFC7] bg-[#EDF4F9]/40 text-center">
+                        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[#7AAFC7] shadow-sm">
+                          <BarChart3 size={24} />
+                        </div>
+                        <h3 className="text-sm font-bold text-[#1A2E3E]">No category data yet</h3>
+                        <p className="mt-1 max-w-xs text-xs text-[#4A6070]">Publish approved events and this section will show category analytics.</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                   {/* Top cities */}
                   <div className="card p-5">
                     <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-sm">
-                      <Globe size={14} className="text-blue-600" /> Top Cities
+                      <Globe size={14} className="text-gray-700" /> Top Cities
                     </h4>
                     <div className="space-y-3">
-                      {a.topCities.map((city, i) => {
-                        const max = a.topCities[0].events
+                      {safeTopCities.length > 0 ? safeTopCities.map((city, i) => {
+                        const max = Math.max(...safeTopCities.map(c => c.events || 0), 1)
+                        const eventsCount = Number(city.events ?? 0)
                         return (
                           <div key={city.city} className="flex items-center gap-3">
                             <span className="text-xs text-gray-400 w-4 text-right font-medium">{i + 1}</span>
                             <div className="flex-1">
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-sm font-medium text-gray-900">{city.city}</span>
-                                <span className="text-xs font-semibold text-gray-500">{city.events}</span>
+                                <span className="text-xs font-semibold text-gray-500">{eventsCount}</span>
                               </div>
                               <div className="h-1.5 bg-gray-100 rounded-full">
-                                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(city.events / max) * 100}%` }} />
+                                <div className="h-full rounded-full bg-gray-900" style={{ width: `${max > 0 ? (eventsCount / max) * 100 : 0}%` }} />
                               </div>
                             </div>
                           </div>
                         )
-                      })}
+                      }) : (
+                        <div className="flex h-32 items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 text-sm text-[#4A6070]">
+                          No city analytics yet.
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Recent activity */}
                   <div className="card p-5">
                     <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-sm">
-                      <Activity size={14} className="text-blue-600" /> Recent Activity
+                      <Activity size={14} className="text-gray-700" /> Recent Activity
                     </h4>
                     <div className="space-y-2">
-                      {a.recentActivity.map((activity, i) => {
+                      {a.recentActivity.length > 0 ? a.recentActivity.map((activity, i) => {
                         const iconMap = {
                           check: <CheckCircle size={14} className="text-emerald-500" />,
                           alert: <AlertTriangle size={14} className="text-amber-500" />,
@@ -373,7 +459,7 @@ export default function AdminDashboard() {
                           x:     <XCircle size={14} className="text-red-500" />,
                         }
                         return (
-                          <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                          <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 transition-colors">
                             <div className="mt-0.5 shrink-0">{iconMap[activity.icon]}</div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm text-gray-700">{activity.message}</p>
@@ -381,30 +467,30 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                         )
-                      })}
+                      }) : (<div className="text-sm text-gray-400 text-center py-6">No recent activity</div>)}
                     </div>
                   </div>
                 </div>
 
                 {/* Platform health */}
-                <div className="card p-5 flex items-center gap-6">
+                <div className="card p-5 flex items-center gap-6 border border-gray-200">
                   <div className="w-20 h-20 relative shrink-0">
                     <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                       <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="12" />
                       <circle
                         cx="50" cy="50" r="40" fill="none"
-                        stroke={a.avgRiskScore > 70 ? '#ef4444' : a.avgRiskScore > 40 ? '#f59e0b' : '#10b981'}
+                        stroke="#7AAFC7"
                         strokeWidth="12" strokeLinecap="round"
                         strokeDasharray={`${(a.avgRiskScore / 100) * 251} 251`}
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-sm font-bold text-gray-900">{a.avgRiskScore}</span>
+                      <span className="text-sm font-bold text-gray-900">{Number(a.avgRiskScore) || 0}</span>
                     </div>
                   </div>
                   <div>
                     <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">Avg. Risk Score</p>
-                    <p className="text-3xl font-black text-gray-900">{a.avgRiskScore} <span className="text-lg text-gray-400 font-normal">/ 100</span></p>
+                    <p className="text-3xl font-black text-gray-900">{Number(a.avgRiskScore) || 0} <span className="text-lg text-gray-400 font-normal">/ 100</span></p>
                     <p className="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
                       <CheckCircle size={11} /> Low risk — platform is healthy
                     </p>
@@ -418,7 +504,7 @@ export default function AdminDashboard() {
               <div className="space-y-3 animate-fade-in">
                 {/* Active-filter banner */}
                 {(eventsInstFilter || eventsMonthOnly) && (
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-700 font-medium">
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-700 font-medium">
                     <span className="flex-1">
                       {eventsInstFilter && <>Showing events from <span className="font-bold">{eventsInstFilter}</span></>}
                       {eventsInstFilter && eventsMonthOnly && ' · '}
@@ -426,7 +512,7 @@ export default function AdminDashboard() {
                     </span>
                     <button
                       onClick={() => { setEventsInstFilter(''); setEventsMonthOnly(false) }}
-                      className="text-xs font-semibold text-blue-600 hover:text-blue-800 underline"
+                      className="text-xs font-semibold text-gray-700 hover:text-gray-900 underline"
                     >
                       Clear filter
                     </button>
@@ -527,7 +613,7 @@ export default function AdminDashboard() {
                         key={val}
                         onClick={() => setUserFilter(val)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                          userFilter === val ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        userFilter === val ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                         }`}
                       >
                         {lbl}
@@ -535,7 +621,7 @@ export default function AdminDashboard() {
                     ))}
                     <button
                       onClick={() => { setCreateAdminOpen(true); setCreateAdminError('') }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-colors ml-auto"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-900 hover:bg-gray-800 text-white transition-colors ml-auto"
                     >
                       <UserPlus size={13} /> Create Institution Admin
                     </button>
@@ -706,7 +792,7 @@ export default function AdminDashboard() {
                             className="btn-primary flex-1 justify-center"
                           >
                             {createAdminLoading
-                              ? <div className="w-4 h-4 border-2 border-blue-300 border-t-white rounded-full animate-spin" />
+                              ? <div className="w-4 h-4 border-2 border-gray-300 border-t-white rounded-full animate-spin" />
                               : <><UserPlus size={14} /> Create Account</>
                             }
                           </button>
@@ -725,7 +811,7 @@ export default function AdminDashboard() {
                   {allUsers.filter(u => u.role === 'institution_admin').map(inst => {
                     const isSuspended = suspendedInsts.has(inst.institution)
                     return (
-                      <div key={inst.id} className={`card p-5 hover:shadow-md transition-all duration-200 ${isSuspended ? 'border-red-200 bg-red-50/30' : 'hover:border-blue-200'}`}>
+                      <div key={inst.id} className={`card p-5 hover:shadow-md transition-all duration-200 ${isSuspended ? 'border-red-200 bg-red-50/30' : 'hover:border-gray-200'}`}>
                         <div className="flex items-start gap-4 mb-4">
                           <Avatar
                             initials={inst.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -838,13 +924,13 @@ export default function AdminDashboard() {
 
                 {/* Active filter banner */}
                 {modStatusFilter && (
-                  <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-700 font-medium">
+                  <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-700 font-medium">
                     <span className="flex-1">
                       Showing: <span className="font-bold capitalize">{modStatusFilter.replace('_', ' ')}</span>
                     </span>
                     <button
                       onClick={() => setModStatusFilter('')}
-                      className="text-xs font-semibold text-blue-600 hover:text-blue-800 underline"
+                      className="text-xs font-semibold text-gray-700 hover:text-gray-900 underline"
                     >
                       Show all
                     </button>
@@ -953,7 +1039,7 @@ export default function AdminDashboard() {
                                         <p className="text-xs text-gray-400 mb-1.5">Tags</p>
                                         <div className="flex flex-wrap gap-1.5">
                                           {d.tags.map(tag => (
-                                            <span key={tag} className="badge bg-blue-50 text-blue-600 border border-blue-200 text-xs">{tag}</span>
+                                            <span key={tag} className="badge bg-gray-50 text-gray-700 border border-gray-200 text-xs">{tag}</span>
                                           ))}
                                         </div>
                                       </div>
@@ -971,8 +1057,8 @@ export default function AdminDashboard() {
                                   </div>
 
                                   {item.note && (
-                                    <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                                      <p className="text-xs text-gray-600"><span className="text-blue-600 font-semibold">Reviewer note:</span> {item.note}</p>
+                                    <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
+                                      <p className="text-xs text-gray-600"><span className="text-gray-700 font-semibold">Reviewer note:</span> {item.note}</p>
                                     </div>
                                   )}
                                 </div>

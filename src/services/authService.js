@@ -321,7 +321,6 @@ export async function createInstitutionAdmin(name, email, password, institution)
     name: trimmedName,
     email: normalizedEmail,
     password,
-    role: 'institution_admin',
     institution: trimmedInstitution,
   })
 }

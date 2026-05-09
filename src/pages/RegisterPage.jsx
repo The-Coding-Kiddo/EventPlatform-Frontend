@@ -45,7 +45,7 @@ export default function RegisterPage() {
 
         <div className="mb-8">
           <h1 className="text-3xl font-black text-gray-900 mb-2">Create an account</h1>
-          <p className="text-gray-500">Join EventSphere to discover and register for events.</p>
+          <p className="text-gray-500">Join Eventim to discover and register for events.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
