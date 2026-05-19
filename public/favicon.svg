@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Badge background -->
+  <rect width="40" height="40" rx="11" fill="url(#g)"/>
+
+  <!--
+    4-pointed sparkle ✦
+    Center 20,20 · tips at top 20,5 · right 35,20 · bottom 20,35 · left 5,20
+    Cubic bezier control points pull the sides inward → concave sparkle silhouette
+  -->
+  <path
+    d="M 20 5
+       C 21.8 13.2  26.8 18.2  35 20
+       C 26.8 21.8  21.8 26.8  20 35
+       C 18.2 26.8  13.2 21.8  5  20
+       C 13.2 18.2  18.2 13.2  20 5
+       Z"
+    fill="white"
+    fill-opacity="0.95"
+  />
+</svg>
