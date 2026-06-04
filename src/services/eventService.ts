@@ -67,6 +67,22 @@ export const eventService = {
   },
   getAttendees: async (id: string) => {
     const response = await api.get(`/events/${id}/attendees`)
+    return response.data?.data || response.data
+  },
+  inviteAttendee: async (id: string, data: { email: string; name?: string }) => {
+    const response = await api.post(`/events/${id}/invite-attendee`, data)
     return response.data
-  }
+  },
+  getAnalytics: async () => {
+    const response = await api.get("/admin/analytics")
+    return response.data?.data || response.data
+  },
+  getUsers: async (params?: { skip?: number; take?: number }) => {
+    const response = await api.get("/admin/users", { params })
+    return response.data?.data || response.data
+  },
+  updateUserStatus: async (id: string, status: 'active' | 'suspended') => {
+    const response = await api.patch(`/admin/users/${id}`, { status })
+    return response.data?.data || response.data
+  },
 }
