@@ -85,4 +85,8 @@ export const eventService = {
     const response = await api.patch(`/admin/users/${id}`, { status })
     return response.data?.data || response.data
   },
+  provisionAdmin: async (data: { name: string; email: string; password: string; institution: string }) => {
+    const response = await api.post('/auth/provision', data)
+    return response.data?.data || response.data
+  },
 }

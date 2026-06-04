@@ -22,6 +22,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -56,6 +57,11 @@ export default function AdminDashboard() {
   const [userSearch, setUserSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("all")
   const [togglingUserId, setTogglingUserId] = useState<string | null>(null)
+
+  // Provision Institution Admin dialog
+  const [showProvisionDialog, setShowProvisionDialog] = useState(false)
+  const [provisionForm, setProvisionForm] = useState({ name: '', email: '', password: '', institution: '' })
+  const [isProvisioning, setIsProvisioning] = useState(false)
 
   // Attendee list and invite states
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
@@ -138,6 +144,45 @@ export default function AdminDashboard() {
       toast.error("Failed to update user status")
     } finally {
       setTogglingUserId(null)
+    }
+  }
+
+  const handleProvision = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const name = provisionForm.name.trim()
+    const email = provisionForm.email.trim().toLowerCase()
+    const password = provisionForm.password
+    const institution = provisionForm.institution.trim()
+    if (!name || !email || !password || !institution) {
+      toast.error("All fields are required")
+      return
+    }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters")
+      return
+    }
+    setIsProvisioning(true)
+    try {
+      const result = await eventService.provisionAdmin({ name, email, password, institution })
+      toast.success(`Institution Admin created for ${institution}!`)
+      setShowProvisionDialog(false)
+      setProvisionForm({ name: '', email: '', password: '', institution: '' })
+      // Add the new user to the list immediately
+      if (result?.user) {
+        setPlatformUsers(prev => [{
+          suspended: false,
+          createdAt: new Date().toISOString(),
+          ...result.user,
+        }, ...prev])
+        setRoleFilter('institution_admin')
+      } else {
+        // Force refresh users list
+        setPlatformUsers([])
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to create institution admin")
+    } finally {
+      setIsProvisioning(false)
     }
   }
 
@@ -292,6 +337,26 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 <>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <h2 className="text-xl font-semibold">Executive Analytics</h2>
+                      <p className="text-sm text-muted-foreground">
+                        Platform health, institutions, and event activity.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setRoleFilter('institution_admin')
+                        setShowProvisionDialog(true)
+                      }}
+                      className="w-full sm:w-auto"
+                    >
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Add Inst. Admin
+                    </Button>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <Card className="glass border-white/10">
                       <CardHeader className="pb-2">
@@ -516,6 +581,17 @@ export default function AdminDashboard() {
                         </Button>
                       ))}
                     </div>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setRoleFilter('institution_admin')
+                        setShowProvisionDialog(true)
+                      }}
+                      className="w-full sm:w-auto"
+                    >
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Add
+                    </Button>
                   </div>
 
                   {isUsersLoading ? (
@@ -599,6 +675,117 @@ export default function AdminDashboard() {
             </TabsContent>
           )}
         </Tabs>
+
+        {/* Dialog for provisioning institution admins */}
+        <Dialog
+          open={showProvisionDialog}
+          onOpenChange={(open) => {
+            setShowProvisionDialog(open)
+            if (!open) {
+              setProvisionForm({ name: '', email: '', password: '', institution: '' })
+            }
+          }}
+        >
+          <DialogContent className="glass border-white/20 text-foreground max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                <UserPlus className="w-6 h-6 text-primary" />
+                Add Institution Admin
+              </DialogTitle>
+              <DialogDescription>
+                Create a login for a partner institution admin using the same provision flow as Swagger.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleProvision} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="provision-name" className="text-sm font-medium">
+                  Admin Name
+                </label>
+                <Input
+                  id="provision-name"
+                  placeholder="e.g. Tech Admin"
+                  value={provisionForm.name}
+                  onChange={(e) => setProvisionForm((prev) => ({ ...prev, name: e.target.value }))}
+                  className="bg-white/5 border-white/10"
+                  autoComplete="name"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="provision-email" className="text-sm font-medium">
+                  Email Address
+                </label>
+                <Input
+                  id="provision-email"
+                  type="email"
+                  placeholder="admin@institution.edu"
+                  value={provisionForm.email}
+                  onChange={(e) => setProvisionForm((prev) => ({ ...prev, email: e.target.value }))}
+                  className="bg-white/5 border-white/10"
+                  autoComplete="email"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="provision-institution" className="text-sm font-medium">
+                  Institution
+                </label>
+                <Input
+                  id="provision-institution"
+                  placeholder="e.g. TechVision Institute"
+                  value={provisionForm.institution}
+                  onChange={(e) => setProvisionForm((prev) => ({ ...prev, institution: e.target.value }))}
+                  className="bg-white/5 border-white/10"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="provision-password" className="text-sm font-medium">
+                  Temporary Password
+                </label>
+                <Input
+                  id="provision-password"
+                  type="password"
+                  placeholder="Minimum 6 characters"
+                  value={provisionForm.password}
+                  onChange={(e) => setProvisionForm((prev) => ({ ...prev, password: e.target.value }))}
+                  className="bg-white/5 border-white/10"
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                />
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowProvisionDialog(false)}
+                  disabled={isProvisioning}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isProvisioning}>
+                  {isProvisioning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Create Admin
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* Dialog for event attendees */}
         <Dialog open={selectedEvent !== null} onOpenChange={(open) => { if (!open) setSelectedEvent(null) }}>
