@@ -2,9 +2,13 @@ import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { ArrowRight, Sparkles } from "lucide-react"
-import heroImage from "@/assets/hero-event.png"
+import heroImage from "@/assets/hero-tech-education.png"
+import { useAuth } from "@/context/AuthContext"
 
 export function Hero() {
+  const { user } = useAuth()
+  const canHostEvents = user?.role === "super_admin" || user?.role === "institution_admin"
+
   return (
     <section className="relative pt-32 pb-20 overflow-hidden mesh-gradient">
       <div className="container mx-auto px-4 relative z-10">
@@ -17,28 +21,27 @@ export function Hero() {
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-6 border border-primary/20">
               <Sparkles className="w-3 h-3" />
-              <span>The next generation of event management</span>
+              <span>Discover meaningful events in one place</span>
             </div>
             
             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70 leading-tight">
-              Create Unforgettable <br /> Experiences with Ease
+              Discover Events That <br /> Move You Forward
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-xl">
-              From intimate workshops to global conferences, Eventim provides everything you need to plan, promote, and manage your events in one beautiful platform.
+              Eventim helps people, institutions, and communities find and host conferences, workshops, gatherings, and shared experiences that bring the right audience together.
             </p>
             
-            <div className="flex flex-col sm:flex-row items-center justify-start gap-4">
-              <Link to="/create-event">
-                <Button size="lg" className="h-12 px-8 rounded-full text-base font-semibold group">
-                  Start Planning Now
-                  <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </Link>
-              <Button size="lg" variant="outline" className="h-12 px-8 rounded-full text-base font-semibold bg-background/50 backdrop-blur-sm">
-                Watch Demo
-              </Button>
-            </div>
+            {canHostEvents && (
+              <div className="flex flex-col sm:flex-row items-center justify-start gap-4">
+                <Link to="/create-event">
+                  <Button size="lg" className="h-12 px-8 rounded-full text-base font-semibold group">
+                    Start Hosting
+                    <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
+              </div>
+            )}
           </motion.div>
 
           <motion.div
@@ -50,7 +53,7 @@ export function Hero() {
             <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20 glass p-2 rotate-2 hover:rotate-0 transition-transform duration-500">
               <img 
                 src={heroImage} 
-                alt="Vibrant Event" 
+                alt="People attending a professional event and connecting with each other" 
                 className="rounded-2xl w-full object-cover aspect-[4/3]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
