@@ -15,7 +15,7 @@ export default function EventsPage() {
             </p>
           </div>
         </div>
-        <EventList />
+        <EventList showPastEvents />
       </main>
       <Footer />
     </div>

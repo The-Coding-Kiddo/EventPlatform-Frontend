@@ -21,7 +21,7 @@ export type Event = {
 }
 
 export const eventService = {
-  getPublicEvents: async (params?: { category?: string; city?: string; search?: string; page?: number; limit?: number }) => {
+  getPublicEvents: async (params?: { category?: string; city?: string; search?: string; timeframe?: 'upcoming' | 'past' | 'all'; skip?: number; take?: number }) => {
     const response = await api.get("/events", { params })
     return response.data
   },
