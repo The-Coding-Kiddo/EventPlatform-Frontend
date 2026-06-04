@@ -12,6 +12,7 @@ import { Navbar } from "@/components/layout/Navbar"
 import { Footer } from "@/components/layout/Footer"
 import { eventService } from "@/services/eventService"
 import { toast } from "sonner"
+import { Upload, Trash2 } from "lucide-react"
 
 const eventSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
@@ -35,6 +36,8 @@ export default function CreateEventPage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
@@ -44,6 +47,29 @@ export default function CreateEventPage() {
       image: "",
     }
   })
+
+  const imageValue = watch("image")
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image too large", {
+          description: "Max image size is 5MB."
+        })
+        return
+      }
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setValue("image", reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setValue("image", "")
+  }
 
   const onSubmit = async (data: EventFormValues) => {
     setIsLoading(true)
@@ -93,26 +119,14 @@ export default function CreateEventPage() {
                     {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold">Category</label>
-                      <Input 
-                        {...register("category")}
-                        placeholder="e.g. Music, Tech, Food" 
-                        className={errors.category ? "border-destructive" : ""}
-                      />
-                      {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold">Image URL (Optional)</label>
-                      <Input 
-                        {...register("image")}
-                        placeholder="https://example.com/image.jpg" 
-                        className={errors.image ? "border-destructive" : ""}
-                      />
-                      {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
-                    </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Category</label>
+                    <Input 
+                      {...register("category")}
+                      placeholder="e.g. Music, Tech, Food" 
+                      className={errors.category ? "border-destructive" : ""}
+                    />
+                    {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -189,6 +203,42 @@ export default function CreateEventPage() {
                       className={`min-h-[120px] ${errors.description ? "border-destructive" : ""}`}
                     />
                     {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Event Banner Image (Optional)</label>
+                    {imageValue ? (
+                      <div className="relative rounded-lg overflow-hidden border border-white/10 aspect-video group">
+                        <img 
+                          src={imageValue} 
+                          alt="Event preview" 
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Button 
+                            type="button" 
+                            variant="destructive" 
+                            size="sm" 
+                            onClick={handleRemoveImage}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" /> Remove Image
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-white/20 rounded-lg p-6 hover:border-primary/50 transition-colors cursor-pointer text-center relative flex flex-col items-center justify-center min-h-[150px] bg-white/5">
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleFileChange}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                        <span className="text-sm font-medium">Click or drag an image here to upload</span>
+                        <span className="text-xs text-muted-foreground mt-1">PNG, JPG, or WEBP up to 5MB</span>
+                      </div>
+                    )}
+                    {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
                   </div>
 
                   <Button className="w-full h-12 text-base font-bold" disabled={isLoading}>
