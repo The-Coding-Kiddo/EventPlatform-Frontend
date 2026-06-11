@@ -7,7 +7,7 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, Building2, User } from "lucide-react"
 import { EventimLogo } from "@/components/brand/EventimLogo"
 import { useAuth } from "@/context/AuthContext"
 import { toast } from "sonner"
@@ -17,11 +17,13 @@ const registerSchema = z.object({
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  institutionName: z.string().optional(),
 })
 
 type RegisterFormValues = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
+  const [role, setRole] = useState<"citizen" | "institution">("citizen")
   const [isLoading, setIsLoading] = useState(false)
   const { register: registerUser } = useAuth()
   const navigate = useNavigate()
@@ -35,9 +37,13 @@ export default function RegisterPage() {
   })
 
   const onSubmit = async (data: RegisterFormValues) => {
+    if (role === "institution" && !data.institutionName?.trim()) {
+      toast.error("Please enter your institution name")
+      return
+    }
     setIsLoading(true)
     try {
-      await registerUser(data)
+      await registerUser({ ...data, role })
       toast.success("Account created!", {
         description: "You can now sign in with your credentials.",
       })
@@ -75,6 +81,29 @@ export default function RegisterPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="flex gap-2 mb-6 bg-muted/30 rounded-lg p-1">
+              <button
+                type="button"
+                onClick={() => setRole("citizen")}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-all ${
+                  role === "citizen" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <User className="w-4 h-4" />
+                Citizen
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("institution")}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-all ${
+                  role === "institution" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Building2 className="w-4 h-4" />
+                Institution
+              </button>
+            </div>
+
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -94,6 +123,18 @@ export default function RegisterPage() {
                   {errors.lastName && <p className="text-xs text-destructive">{errors.lastName.message}</p>}
                 </div>
               </div>
+
+              {role === "institution" && (
+                <div className="space-y-2">
+                  <Input 
+                    {...register("institutionName")}
+                    placeholder="Institution Name" 
+                    className={`bg-white/50 border-white/20 focus:bg-white transition-all ${errors.institutionName ? "border-destructive" : ""}`}
+                  />
+                  {errors.institutionName && <p className="text-xs text-destructive">{errors.institutionName.message}</p>}
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Input 
                   {...register("email")}
@@ -113,7 +154,7 @@ export default function RegisterPage() {
                 {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
               </div>
               <Button className="w-full h-11 font-semibold" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Get Started"}
+                {isLoading ? "Creating account..." : role === "institution" ? "Register Institution" : "Get Started"}
               </Button>
             </form>
 

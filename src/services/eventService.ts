@@ -21,7 +21,7 @@ export type Event = {
 }
 
 export const eventService = {
-  getPublicEvents: async (params?: { category?: string; city?: string; search?: string; timeframe?: 'upcoming' | 'past' | 'all'; skip?: number; take?: number }) => {
+  getPublicEvents: async (params?: { category?: string; city?: string; search?: string; timeframe?: 'upcoming' | 'past' | 'all'; skip?: number; take?: number; institution?: string }) => {
     const response = await api.get("/events", { params })
     return response.data
   },
@@ -95,8 +95,24 @@ export const eventService = {
     const response = await api.patch(`/admin/users/${id}`, { status })
     return response.data?.data || response.data
   },
-  provisionAdmin: async (data: { name: string; email: string; password: string; institution: string }) => {
+  createInstitution: async (data: { name: string; email: string; password: string; institution: string }) => {
     const response = await api.post('/auth/provision', data)
+    return response.data?.data || response.data
+  },
+  searchInstitutions: async (params?: { search?: string; skip?: number; take?: number }) => {
+    const response = await api.get("/institutions", { params })
+    return response.data?.data || response.data
+  },
+  getInstitutionProfile: async (id: string) => {
+    const response = await api.get(`/institutions/${id}`)
+    return response.data?.data || response.data
+  },
+  followInstitution: async (id: string) => {
+    const response = await api.post(`/institutions/${id}/follow`)
+    return response.data?.data || response.data
+  },
+  unfollowInstitution: async (id: string) => {
+    const response = await api.delete(`/institutions/${id}/follow`)
     return response.data?.data || response.data
   },
 }

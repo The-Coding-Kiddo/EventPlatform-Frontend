@@ -9,6 +9,8 @@ interface User {
   lastName?: string
   role: string
   institution?: string
+  bio?: string
+  profilePicture?: string
   savedEvents?: string[]
   registeredEvents?: string[]
   waitlistedEvents?: string[]

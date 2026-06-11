@@ -11,10 +11,13 @@ export const authService = {
     return payload
   },
   register: async (userData: any) => {
-    const payload = {
+    const payload: any = {
       name: `${userData.firstName} ${userData.lastName}`,
       email: userData.email,
       password: userData.password,
+    }
+    if (userData.role === 'institution') {
+      payload.institution = userData.institutionName
     }
     const response = await api.post("/auth/register", payload)
     return response.data
@@ -26,7 +29,7 @@ export const authService = {
     const response = await api.get("/auth/me")
     return response.data?.data || response.data || response
   },
-  updateProfile: async (data: { name?: string; email?: string }) => {
+  updateProfile: async (data: { name?: string; email?: string; bio?: string }) => {
     const response = await api.patch("/user/profile", data)
     return response.data?.data || response.data || response
   },

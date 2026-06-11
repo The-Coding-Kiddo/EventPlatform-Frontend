@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { Calendar, MapPin, Bookmark, Settings, Lock, Activity } from "lucide-react"
+import { Calendar, MapPin, Bookmark, Settings, Lock, Activity, Users, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +21,9 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
+  const [followerCount, setFollowerCount] = useState(0)
+
+  const isInstitution = user?.role === "institution"
 
   useEffect(() => {
     const fetchUserEvents = async () => {
@@ -29,7 +32,6 @@ export default function ProfilePage() {
         return
       }
       try {
-        // Fetch only the specific events the user has saved / registered / waitlisted for
         const savedIds = user.savedEvents || []
         const registeredIds = user.registeredEvents || []
         const waitlistedIds = user.waitlistedEvents || []
@@ -43,6 +45,13 @@ export default function ProfilePage() {
         setSavedEvents(savedResults.filter(Boolean) as Event[])
         setRegisteredEvents(registeredResults.filter(Boolean) as Event[])
         setWaitlistedEvents(waitlistedResults.filter(Boolean) as Event[])
+
+        if (isInstitution) {
+          try {
+            const profile = await eventService.getInstitutionProfile(user.id)
+            setFollowerCount(profile.followerCount)
+          } catch {}
+        }
       } catch (error) {
         toast.error("Failed to load your events")
       } finally {
@@ -50,7 +59,7 @@ export default function ProfilePage() {
       }
     }
     fetchUserEvents()
-  }, [user])
+  }, [user, isInstitution])
 
   const EventCardList = ({ events }: { events: Event[] }) => {
     if (events.length === 0) {
@@ -117,9 +126,12 @@ export default function ProfilePage() {
             <div>
               <h1 className="text-3xl font-bold">{user?.name}</h1>
               <p className="text-muted-foreground">{user?.email}</p>
-              <div className="mt-2 flex gap-2">
+              {user?.bio && isInstitution && (
+                <p className="text-sm text-muted-foreground/80 mt-2 max-w-prose">{user.bio}</p>
+              )}
+              <div className="mt-2 flex flex-wrap gap-2">
                 <Badge variant="outline" className="bg-primary/10 border-primary/20">
-                  {user?.role?.replace('_', ' ').toUpperCase()}
+                  {user?.role === 'institution' ? 'INSTITUTION' : user?.role?.replace('_', ' ').toUpperCase()}
                 </Badge>
                 {user?.institution && (
                   <Badge variant="outline" className="bg-secondary/10 border-secondary/20">
@@ -127,14 +139,29 @@ export default function ProfilePage() {
                   </Badge>
                 )}
               </div>
+              {isInstitution && (
+                <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Users className="w-4 h-4" />
+                    {followerCount} follower{followerCount !== 1 ? "s" : ""}
+                  </span>
+                  <Link
+                    to={`/institutions/${user.id}`}
+                    className="inline-flex items-center gap-1 text-primary hover:underline"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    View public profile
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="glass border-white/20" onClick={() => setEditDialogOpen(true)}>
+            <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
               <Settings className="w-4 h-4 mr-2" />
               Edit Profile
             </Button>
-            <Button variant="outline" className="glass border-white/20" onClick={() => setPasswordDialogOpen(true)}>
+            <Button variant="outline" onClick={() => setPasswordDialogOpen(true)}>
               <Lock className="w-4 h-4 mr-2" />
               Password
             </Button>
