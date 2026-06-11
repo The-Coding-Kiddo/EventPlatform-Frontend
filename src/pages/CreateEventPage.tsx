@@ -13,6 +13,7 @@ import { Footer } from "@/components/layout/Footer"
 import { eventService } from "@/services/eventService"
 import { toast } from "sonner"
 import { Upload, Trash2 } from "lucide-react"
+import { CATEGORIES } from "@/lib/categories"
 
 const eventSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
@@ -121,11 +122,15 @@ export default function CreateEventPage() {
 
                   <div className="space-y-2">
                     <label className="text-sm font-semibold">Category</label>
-                    <Input 
+                    <select
                       {...register("category")}
-                      placeholder="e.g. Music, Tech, Food" 
-                      className={errors.category ? "border-destructive" : ""}
-                    />
+                      className={`flex h-10 w-full rounded-lg border bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors.category ? "border-destructive" : "border-input"}`}
+                    >
+                      <option value="">Select a category</option>
+                      {CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
                     {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
                   </div>
 

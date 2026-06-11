@@ -118,10 +118,14 @@ export default function ProfilePage() {
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="mb-8 flex flex-col md:flex-row gap-8 items-start md:items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30">
-              <span className="text-3xl font-bold text-primary">
-                {user?.name?.[0]?.toUpperCase()}
-              </span>
+            <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-2 border-border overflow-hidden shrink-0">
+              {user?.profilePicture ? (
+                <img src={user.profilePicture} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-3xl font-bold text-muted-foreground/40">
+                  {user?.name?.[0]?.toUpperCase()}
+                </span>
+              )}
             </div>
             <div>
               <h1 className="text-3xl font-bold">{user?.name}</h1>

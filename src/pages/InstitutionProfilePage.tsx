@@ -16,6 +16,7 @@ type InstitutionProfile = {
   bio: string | null
   profilePicture: string | null
   followerCount: number
+  isFollowing?: boolean
 }
 
 export default function InstitutionProfilePage() {
@@ -35,8 +36,9 @@ export default function InstitutionProfilePage() {
       try {
         const profileData = await eventService.getInstitutionProfile(id)
         setProfile(profileData)
+        setIsFollowing(profileData.isFollowing || false)
         if (profileData.institution) {
-          const eventsData = await eventService.getPublicEvents({ institution: profileData.institution, take: 50 })
+          const eventsData = await eventService.getPublicEvents({ institution: profileData.institution, take: 50, timeframe: 'all' })
           setEvents(eventsData?.items || [])
         }
       } catch (error) {

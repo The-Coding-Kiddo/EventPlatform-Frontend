@@ -10,17 +10,20 @@ import {
   Briefcase,
   Heart,
 } from "lucide-react"
+import { CATEGORIES } from "@/lib/categories"
 
-const categories = [
-  { label: "Technology", icon: Monitor },
-  { label: "Education", icon: BookOpen },
-  { label: "Art", icon: Palette },
-  { label: "Music", icon: Music },
-  { label: "Food", icon: UtensilsCrossed },
-  { label: "Sports", icon: Trophy },
-  { label: "Business", icon: Briefcase },
-  { label: "Health", icon: Heart },
-]
+const categoryIcons: Record<string, typeof Monitor> = {
+  Technology: Monitor,
+  Education: BookOpen,
+  Art: Palette,
+  Music: Music,
+  Food: UtensilsCrossed,
+  Sports: Trophy,
+  Business: Briefcase,
+  Health: Heart,
+}
+
+const categories = CATEGORIES.map((label) => ({ label, icon: categoryIcons[label] }))
 
 export function CategoryPills() {
   const navigate = useNavigate()
