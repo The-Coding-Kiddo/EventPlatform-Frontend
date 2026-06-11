@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { Calendar, MapPin, Tag, User, Bookmark, Settings, Activity } from "lucide-react"
+import { Calendar, MapPin, Bookmark, Settings, Lock, Activity } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/context/AuthContext"
@@ -10,6 +10,8 @@ import { eventService } from "@/services/eventService"
 import type { Event } from "@/services/eventService"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
+import EditProfileDialog from "@/components/EditProfileDialog"
+import ChangePasswordDialog from "@/components/ChangePasswordDialog"
 
 export default function ProfilePage() {
   const { user } = useAuth()
@@ -17,6 +19,8 @@ export default function ProfilePage() {
   const [registeredEvents, setRegisteredEvents] = useState<Event[]>([])
   const [waitlistedEvents, setWaitlistedEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
 
   useEffect(() => {
     const fetchUserEvents = async () => {
@@ -125,10 +129,18 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-          <Button variant="outline" className="glass border-white/20">
-            <Settings className="w-4 h-4 mr-2" />
-            Edit Profile
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" className="glass border-white/20" onClick={() => setEditDialogOpen(true)}>
+              <Settings className="w-4 h-4 mr-2" />
+              Edit Profile
+            </Button>
+            <Button variant="outline" className="glass border-white/20" onClick={() => setPasswordDialogOpen(true)}>
+              <Lock className="w-4 h-4 mr-2" />
+              Password
+            </Button>
+          </div>
+          <EditProfileDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} />
+          <ChangePasswordDialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen} />
         </div>
 
         <Tabs defaultValue="registered" className="w-full">
