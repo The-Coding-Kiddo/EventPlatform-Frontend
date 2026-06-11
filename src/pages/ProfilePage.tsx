@@ -15,6 +15,7 @@ export default function ProfilePage() {
   const { user } = useAuth()
   const [savedEvents, setSavedEvents] = useState<Event[]>([])
   const [registeredEvents, setRegisteredEvents] = useState<Event[]>([])
+  const [waitlistedEvents, setWaitlistedEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -24,17 +25,20 @@ export default function ProfilePage() {
         return
       }
       try {
-        // Fetch only the specific events the user has saved / registered for
+        // Fetch only the specific events the user has saved / registered / waitlisted for
         const savedIds = user.savedEvents || []
         const registeredIds = user.registeredEvents || []
+        const waitlistedIds = user.waitlistedEvents || []
 
-        const [savedResults, registeredResults] = await Promise.all([
+        const [savedResults, registeredResults, waitlistedResults] = await Promise.all([
           Promise.all(savedIds.map((id) => eventService.getEventById(id).catch(() => null))),
           Promise.all(registeredIds.map((id) => eventService.getEventById(id).catch(() => null))),
+          Promise.all(waitlistedIds.map((id) => eventService.getEventById(id).catch(() => null))),
         ])
 
         setSavedEvents(savedResults.filter(Boolean) as Event[])
         setRegisteredEvents(registeredResults.filter(Boolean) as Event[])
+        setWaitlistedEvents(waitlistedResults.filter(Boolean) as Event[])
       } catch (error) {
         toast.error("Failed to load your events")
       } finally {
@@ -128,22 +132,37 @@ export default function ProfilePage() {
         </div>
 
         <Tabs defaultValue="registered" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-8 glass">
-            <TabsTrigger value="registered">Registered Events</TabsTrigger>
-            <TabsTrigger value="saved">Saved Events</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 max-w-[500px] mb-8 glass">
+            <TabsTrigger value="registered">Registered</TabsTrigger>
+            <TabsTrigger value="waitlisted">Waitlisted</TabsTrigger>
+            <TabsTrigger value="saved">Saved</TabsTrigger>
           </TabsList>
           
           <TabsContent value="registered" className="space-y-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold flex items-center gap-2">
                 <Activity className="w-5 h-5 text-primary" />
-                Upcoming Registrations
+                Confirmed Tickets
               </h3>
             </div>
             {isLoading ? (
               <div className="h-32 glass rounded-2xl animate-pulse"></div>
             ) : (
               <EventCardList events={registeredEvents} />
+            )}
+          </TabsContent>
+
+          <TabsContent value="waitlisted" className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-amber-500" />
+                Waitlist Queue
+              </h3>
+            </div>
+            {isLoading ? (
+              <div className="h-32 glass rounded-2xl animate-pulse"></div>
+            ) : (
+              <EventCardList events={waitlistedEvents} />
             )}
           </TabsContent>
           

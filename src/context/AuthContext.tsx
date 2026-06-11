@@ -11,6 +11,7 @@ interface User {
   institution?: string
   savedEvents?: string[]
   registeredEvents?: string[]
+  waitlistedEvents?: string[]
 }
 
 interface AuthContextType {

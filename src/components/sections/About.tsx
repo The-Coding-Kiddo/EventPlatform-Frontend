@@ -16,19 +16,8 @@ export function About() {
               We believe that every gathering is an opportunity for connection, growth, and transformation. Our platform was born from a simple idea: that technology should empower creators, not complicate their work.
             </p>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Today, Eventim is trusted by thousands of organizers around the world to deliver seamless experiences—from intimate workshops to massive festivals. We're committed to building tools that are as beautiful as they are functional.
+              Today, Eventim is trusted by organizers around the world to deliver seamless experiences—from intimate workshops to massive festivals. We're committed to building tools that are as beautiful as they are functional.
             </p>
-            
-            <div className="grid grid-cols-2 gap-8 pt-6">
-              <div>
-                <p className="text-3xl font-extrabold text-primary mb-2">1M+</p>
-                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Tickets Sold</p>
-              </div>
-              <div>
-                <p className="text-3xl font-extrabold text-primary mb-2">50k+</p>
-                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Active Users</p>
-              </div>
-            </div>
           </motion.div>
 
           <motion.div

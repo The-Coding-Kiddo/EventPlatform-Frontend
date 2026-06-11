@@ -61,8 +61,18 @@ export const eventService = {
     const response = await api.post(`/events/${id}/register`)
     return response.data
   },
-  cancelRegistration: async (id: string) => {
-    const response = await api.delete(`/events/${id}/register`)
+  cancelRegistration: async (id: string, userId?: string) => {
+    const response = await api.delete(`/events/${id}/register`, { 
+      params: userId ? { userId } : {} 
+    })
+    return response.data
+  },
+  getQrTicket: async (id: string) => {
+    const response = await api.post(`/events/${id}/qr`)
+    return response.data
+  },
+  checkIn: async (id: string, qrData?: string) => {
+    const response = await api.post(`/events/${id}/check-in`, { qrData })
     return response.data
   },
   getAttendees: async (id: string) => {

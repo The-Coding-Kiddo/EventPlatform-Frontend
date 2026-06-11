@@ -1,4 +1,6 @@
 import { useEffect, useState, useMemo } from "react"
+import { useNavigate } from "react-router-dom"
+import { motion } from "framer-motion"
 import { 
   ShieldCheck, 
   Users, 
@@ -12,6 +14,7 @@ import {
   Search,
   Ban,
   UserCheck,
+  QrCode,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -43,6 +46,7 @@ type PlatformUser = {
 
 export default function AdminDashboard() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("all")
@@ -62,14 +66,6 @@ export default function AdminDashboard() {
   const [showProvisionDialog, setShowProvisionDialog] = useState(false)
   const [provisionForm, setProvisionForm] = useState({ name: '', email: '', password: '', institution: '' })
   const [isProvisioning, setIsProvisioning] = useState(false)
-
-  // Attendee list and invite states
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
-  const [attendees, setAttendees] = useState<any[]>([])
-  const [isAttendeesLoading, setIsAttendeesLoading] = useState(false)
-  const [inviteEmail, setInviteEmail] = useState("")
-  const [inviteName, setInviteName] = useState("")
-  const [isInviting, setIsInviting] = useState(false)
 
   const isSuperAdmin = user?.role === "super_admin"
 
@@ -197,27 +193,6 @@ export default function AdminDashboard() {
     })
   }, [platformUsers, userSearch, roleFilter])
 
-  // Fetch attendees when selectedEvent changes
-  const fetchAttendees = async (eventId: string) => {
-    setIsAttendeesLoading(true)
-    try {
-      const data = await eventService.getAttendees(eventId)
-      setAttendees(data || [])
-    } catch (error) {
-      toast.error("Failed to load attendee list")
-    } finally {
-      setIsAttendeesLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (selectedEvent) {
-      fetchAttendees(selectedEvent.id)
-    } else {
-      setAttendees([])
-    }
-  }, [selectedEvent])
-
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
       await eventService.updateEvent(id, { status })
@@ -225,36 +200,6 @@ export default function AdminDashboard() {
       toast.success(`Event marked as ${status}`)
     } catch (error) {
       toast.error("Failed to update status")
-    }
-  }
-
-  const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedEvent) return
-    if (!inviteEmail.trim()) {
-      toast.error("Email is required")
-      return
-    }
-
-    setIsInviting(true)
-    try {
-      await eventService.inviteAttendee(selectedEvent.id, {
-        email: inviteEmail.trim(),
-        name: inviteName.trim() || undefined,
-      })
-      toast.success("Attendee successfully invited!")
-      setInviteEmail("")
-      setInviteName("")
-      
-      // Refresh local attendee list
-      fetchAttendees(selectedEvent.id)
-      
-      // Increment event attendee count in state
-      setEvents(events.map(e => e.id === selectedEvent.id ? { ...e, attendees: (e.attendees || 0) + 1 } : e))
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to invite attendee")
-    } finally {
-      setIsInviting(false)
     }
   }
 
@@ -533,7 +478,7 @@ export default function AdminDashboard() {
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            onClick={() => setSelectedEvent(event)}
+                            onClick={() => navigate(`/admin/events/${event.id}/attendees`)}
                           >
                             <Users className="w-4 h-4 mr-2" /> Attendees ({event.attendees || 0})
                           </Button>
@@ -784,104 +729,6 @@ export default function AdminDashboard() {
                 </Button>
               </DialogFooter>
             </form>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog for event attendees */}
-        <Dialog open={selectedEvent !== null} onOpenChange={(open) => { if (!open) setSelectedEvent(null) }}>
-          <DialogContent className="glass border-white/20 text-foreground max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                <Users className="w-6 h-6 text-primary" />
-                Attendees: {selectedEvent?.title}
-              </DialogTitle>
-              <DialogDescription>
-                View and manage registered citizens for this event. Capacity: {selectedEvent?.attendees}/{selectedEvent?.capacity}
-              </DialogDescription>
-            </DialogHeader>
-
-            {/* Invite Form */}
-            <Card className="bg-white/5 border-white/10 mt-2">
-              <CardHeader className="pb-3 pt-4">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <UserPlus className="w-4 h-4 text-primary" />
-                  Invite / Add Attendee
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pb-4">
-                <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3 items-end">
-                  <div className="flex-1 space-y-1 w-full">
-                    <label className="text-xs text-muted-foreground font-medium">Name (Optional)</label>
-                    <Input 
-                      placeholder="e.g. John Doe"
-                      value={inviteName}
-                      onChange={(e) => setInviteName(e.target.value)}
-                      className="bg-white/5 border-white/10 text-sm h-10"
-                    />
-                  </div>
-                  <div className="flex-1 space-y-1 w-full">
-                    <label className="text-xs text-muted-foreground font-medium">Email Address</label>
-                    <Input 
-                      type="email"
-                      placeholder="e.g. john@example.com"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      className="bg-white/5 border-white/10 text-sm h-10"
-                      required
-                    />
-                  </div>
-                  <Button type="submit" disabled={isInviting} className="h-10 px-4 font-semibold w-full sm:w-auto">
-                    {isInviting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Inviting...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="w-4 h-4 mr-2" /> Invite
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Attendee List */}
-            <div className="mt-4 space-y-2">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-2">Registered Citizens</h3>
-              {isAttendeesLoading ? (
-                <div className="space-y-2">
-                  <div className="h-12 bg-white/5 rounded-lg animate-pulse" />
-                  <div className="h-12 bg-white/5 rounded-lg animate-pulse" />
-                </div>
-              ) : attendees.length === 0 ? (
-                <p className="text-center text-sm text-muted-foreground py-6 bg-white/5 rounded-lg border border-white/10">
-                  No attendees have registered for this event yet.
-                </p>
-              ) : (
-                <div className="border border-white/10 rounded-lg overflow-hidden bg-white/5 max-h-[250px] overflow-y-auto">
-                  <table className="w-full text-left border-collapse text-sm">
-                    <thead>
-                      <tr className="border-b border-white/10 bg-white/10">
-                        <th className="p-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Name</th>
-                        <th className="p-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Email</th>
-                        <th className="p-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Registered At</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {attendees.map((attendee) => (
-                        <tr key={attendee.id} className="border-b border-white/5 hover:bg-white/5 last:border-0">
-                          <td className="p-3 font-medium">{attendee.name}</td>
-                          <td className="p-3 text-muted-foreground">{attendee.email}</td>
-                          <td className="p-3 text-muted-foreground text-xs">
-                            {new Date(attendee.createdAt).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
           </DialogContent>
         </Dialog>
       </div>
