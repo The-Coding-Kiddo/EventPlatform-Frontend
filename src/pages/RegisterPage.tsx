@@ -7,7 +7,8 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, ChevronLeft, Github, UserPlus } from "lucide-react"
+import { ChevronLeft } from "lucide-react"
+import { EventimLogo } from "@/components/brand/EventimLogo"
 import { useAuth } from "@/context/AuthContext"
 import { toast } from "sonner"
 
@@ -65,10 +66,8 @@ export default function RegisterPage() {
       >
         <Card className="glass shadow-2xl border-white/20">
           <CardHeader className="space-y-1 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="p-3 bg-primary/10 rounded-2xl">
-                <UserPlus className="w-8 h-8 text-primary" />
-              </div>
+            <div className="flex justify-center mb-6">
+              <EventimLogo size={28} />
             </div>
             <CardTitle className="text-2xl font-bold tracking-tight">Create an account</CardTitle>
             <CardDescription>

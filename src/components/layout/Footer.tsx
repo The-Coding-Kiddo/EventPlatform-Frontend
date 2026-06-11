@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { Calendar } from "lucide-react"
+import { EventimLogo } from "@/components/brand/EventimLogo"
 
 export function Footer() {
   return (
@@ -7,9 +7,8 @@ export function Footer() {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 font-bold text-xl tracking-tight mb-4">
-              <Calendar className="w-6 h-6 text-primary" />
-              <span>Eventim</span>
+            <Link to="/" className="inline-block mb-4">
+              <EventimLogo size={20} />
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Making event management simple, beautiful, and accessible for everyone, everywhere.
