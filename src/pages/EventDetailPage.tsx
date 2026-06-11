@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Calendar, MapPin, Tag, ArrowLeft, Users, Building2, Bookmark, BookmarkCheck, CreditCard, Lock, ShieldCheck, QrCode } from "lucide-react"
+import { Calendar, MapPin, Tag, ArrowLeft, Users, Building2, Bookmark, BookmarkCheck, CreditCard, Lock, ShieldCheck, QrCode, ImageOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -211,11 +211,20 @@ export default function EventDetailPage() {
               animate={{ opacity: 1, y: 0 }}
               className="rounded-3xl overflow-hidden h-[400px] relative"
             >
-              <img 
-                src={event.image || "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?w=1200&auto=format&fit=crop&q=80"} 
-                alt={event.title} 
-                className="w-full h-full object-cover"
-              />
+              {event.image ? (
+                <img 
+                  src={event.image} 
+                  alt={event.title} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-muted/30">
+                  <div className="text-center">
+                    <ImageOff className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground/20 uppercase tracking-wider font-medium">No image available</p>
+                  </div>
+                </div>
+              )}
               <Badge className="absolute top-4 right-4 bg-primary/90 backdrop-blur-md text-sm py-1 px-3">
                 {event.category}
               </Badge>

@@ -1,25 +1,22 @@
 import { useEffect, useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import { motion } from "framer-motion"
 import { 
-  ShieldCheck, 
   Users, 
-  Activity, 
   CheckCircle, 
   XCircle, 
-  MapPin, 
-  Plus, 
   Loader2, 
   UserPlus,
   Search,
   Ban,
   UserCheck,
-  QrCode,
+  ExternalLink,
+  Calendar,
+  Building2,
+  Hourglass,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import {
   Dialog,
@@ -33,6 +30,7 @@ import { eventService } from "@/services/eventService"
 import type { Event } from "@/services/eventService"
 import { toast } from "sonner"
 import { useAuth } from "@/context/AuthContext"
+import { cn } from "@/lib/utils"
 
 type PlatformUser = {
   id: string
@@ -49,33 +47,21 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState("all")
+  const [view, setView] = useState<"events" | "people">("events")
 
-  // Analytics states
   const [analytics, setAnalytics] = useState<any>(null)
-  const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(false)
 
-  // Users tab states
   const [platformUsers, setPlatformUsers] = useState<PlatformUser[]>([])
   const [isUsersLoading, setIsUsersLoading] = useState(false)
   const [userSearch, setUserSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("all")
   const [togglingUserId, setTogglingUserId] = useState<string | null>(null)
 
-  // Provision Institution Admin dialog
   const [showProvisionDialog, setShowProvisionDialog] = useState(false)
   const [provisionForm, setProvisionForm] = useState({ name: '', email: '', password: '', institution: '' })
   const [isProvisioning, setIsProvisioning] = useState(false)
 
   const isSuperAdmin = user?.role === "super_admin"
-
-  useEffect(() => {
-    if (user?.role === "super_admin") {
-      setActiveTab("analytics")
-    } else {
-      setActiveTab("all")
-    }
-  }, [user])
 
   useEffect(() => {
     const fetchAllEvents = async () => {
@@ -91,27 +77,14 @@ export default function AdminDashboard() {
     fetchAllEvents()
   }, [])
 
-  // Fetch analytics if super_admin
   useEffect(() => {
     if (isSuperAdmin) {
-      const fetchAnalytics = async () => {
-        setIsAnalyticsLoading(true)
-        try {
-          const data = await eventService.getAnalytics()
-          setAnalytics(data)
-        } catch (error) {
-          toast.error("Failed to load platform analytics")
-        } finally {
-          setIsAnalyticsLoading(false)
-        }
-      }
-      fetchAnalytics()
+      eventService.getAnalytics().then(setAnalytics).catch(() => {})
     }
   }, [isSuperAdmin])
 
-  // Fetch users when Users tab is selected
   useEffect(() => {
-    if (isSuperAdmin && activeTab === "users" && platformUsers.length === 0) {
+    if (isSuperAdmin && view === "people" && platformUsers.length === 0) {
       const fetchUsers = async () => {
         setIsUsersLoading(true)
         try {
@@ -125,7 +98,7 @@ export default function AdminDashboard() {
       }
       fetchUsers()
     }
-  }, [isSuperAdmin, activeTab])
+  }, [isSuperAdmin, view])
 
   const handleToggleSuspend = async (u: PlatformUser) => {
     setTogglingUserId(u.id)
@@ -163,7 +136,6 @@ export default function AdminDashboard() {
       toast.success(`Institution Admin created for ${institution}!`)
       setShowProvisionDialog(false)
       setProvisionForm({ name: '', email: '', password: '', institution: '' })
-      // Add the new user to the list immediately
       if (result?.user) {
         setPlatformUsers(prev => [{
           suspended: false,
@@ -172,7 +144,6 @@ export default function AdminDashboard() {
         }, ...prev])
         setRoleFilter('institution_admin')
       } else {
-        // Force refresh users list
         setPlatformUsers([])
       }
     } catch (error: any) {
@@ -210,418 +181,356 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen pt-24 pb-12 bg-background">
       <div className="container mx-auto px-4 max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <ShieldCheck className="w-8 h-8 text-primary" />
-            {isSuperAdmin ? "Super Admin Dashboard" : "Institution Dashboard"}
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            {isSuperAdmin 
-              ? "Manage platform-wide events, moderation, and users." 
-              : `Manage events for ${user?.institution || "your institution"}.`} 
-            {" "}Role: {user?.role?.toUpperCase()}
-          </p>
+        {/* Header */}
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Building2 className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold">Dashboard</h1>
+              <p className="text-sm text-muted-foreground">
+                {isSuperAdmin
+                  ? "Platform-wide overview"
+                  : user?.institution || "Your institution"}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="glass border-white/10">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {isSuperAdmin ? "Total Platform Events" : "Our Events"}
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card className="bg-card border-border/40">
+            <CardHeader className="pb-1.5">
+              <CardTitle className="text-xs font-medium text-muted-foreground tracking-wide">
+                {isSuperAdmin ? "Events" : "My events"}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{events.length}</div>
+              <div className="text-2xl font-bold">{events.length}</div>
             </CardContent>
           </Card>
-          <Card className="glass border-white/10">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pending Approval</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-amber-500">{pendingEvents.length}</div>
-            </CardContent>
-          </Card>
-          <Card className="glass border-white/10">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {isSuperAdmin ? "Approved Events" : "Total Attendees"}
+          <Card className="bg-card border-border/40">
+            <CardHeader className="pb-1.5">
+              <CardTitle className="text-xs font-medium text-muted-foreground tracking-wide">
+                Pending
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">
-                {isSuperAdmin ? approvedEvents.length : totalAttendees}
+              <div className="text-2xl font-bold text-amber-500">{pendingEvents.length}</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-card border-border/40">
+            <CardHeader className="pb-1.5">
+              <CardTitle className="text-xs font-medium text-muted-foreground tracking-wide">
+                Approved
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-500">
+                {isSuperAdmin ? approvedEvents.length : approvedEvents.length}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-card border-border/40">
+            <CardHeader className="pb-1.5">
+              <CardTitle className="text-xs font-medium text-muted-foreground tracking-wide">
+                {isSuperAdmin ? "Users" : "Attendees"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {isSuperAdmin ? ((analytics?.totalUsers ?? platformUsers.length) || "—") : totalAttendees}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="glass mb-6">
-            {isSuperAdmin && (
-              <TabsTrigger value="analytics">Executive Analytics</TabsTrigger>
-            )}
-            {isSuperAdmin && (
-              <TabsTrigger value="moderation">Event Moderation</TabsTrigger>
-            )}
-            <TabsTrigger value="all">
-              {isSuperAdmin ? "All Events" : "My Events"}
-            </TabsTrigger>
-            {isSuperAdmin && (
-              <TabsTrigger value="users">Users</TabsTrigger>
-            )}
-          </TabsList>
-
-          {isSuperAdmin && (
-            <TabsContent value="analytics" className="space-y-6">
-              {isAnalyticsLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  {[...Array(4)].map((_, i) => (
-                    <Card key={i} className="glass border-white/10 h-32 animate-pulse bg-white/5" />
+        {/* Pending moderation alert — super admin only */}
+        {isSuperAdmin && pendingEvents.length > 0 && (
+          <Card className="mb-8 border-amber-500/20 bg-amber-500/5">
+            <CardContent className="p-4 flex items-start gap-4">
+              <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                <Hourglass className="w-4 h-4 text-amber-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold mb-1">
+                  {pendingEvents.length} event{pendingEvents.length > 1 ? "s" : ""} pending review
+                </p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  {pendingEvents.slice(0, 3).map(e => (
+                    <span key={e.id} className="truncate max-w-[200px]">{e.title}</span>
                   ))}
-                </div>
-              ) : (
-                <>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div>
-                      <h2 className="text-xl font-semibold">Executive Analytics</h2>
-                      <p className="text-sm text-muted-foreground">
-                        Platform health, institutions, and event activity.
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        setRoleFilter('institution_admin')
-                        setShowProvisionDialog(true)
-                      }}
-                      className="w-full sm:w-auto"
-                    >
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Add Inst. Admin
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <Card className="glass border-white/10">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Total Platform Events</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold">{analytics?.totalEvents ?? 0}</div>
-                      </CardContent>
-                    </Card>
-                    <Card className="glass border-white/10">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Registered Citizens</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold text-primary">{analytics?.totalUsers ?? 0}</div>
-                      </CardContent>
-                    </Card>
-                    <Card className="glass border-white/10">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Active Institutions</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold text-emerald-500">
-                          {analytics?.activeInstitutions ?? 0} <span className="text-lg font-normal text-muted-foreground">/ {analytics?.totalInstitutions ?? 0}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="glass border-white/10">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Approval Rate</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold text-amber-500">{analytics?.approvalRate ?? 0}%</div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Category Distribution card */}
-                    <Card className="glass border-white/10">
-                      <CardHeader>
-                        <CardTitle className="text-lg font-bold flex items-center gap-2">
-                          <Activity className="w-5 h-5 text-primary" />
-                          Category Distribution
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {!analytics?.categoryDistribution || analytics.categoryDistribution.length === 0 ? (
-                          <p className="text-sm text-muted-foreground text-center py-6">No data available.</p>
-                        ) : (
-                          analytics.categoryDistribution.map((item: any) => {
-                            const percentage = analytics.totalEvents > 0 
-                              ? Math.round((item.value / analytics.totalEvents) * 100)
-                              : 0
-                            return (
-                              <div key={item.name} className="space-y-2">
-                                <div className="flex justify-between text-sm">
-                                  <span className="font-medium">{item.name}</span>
-                                  <span className="text-muted-foreground">{item.value} events ({percentage}%)</span>
-                                </div>
-                                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                                  <div 
-                                    className="h-full bg-gradient-to-r from-primary to-blue-500 rounded-full" 
-                                    style={{ width: `${percentage}%` }}
-                                  />
-                                </div>
-                              </div>
-                            )
-                          })
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    {/* Top Cities card */}
-                    <Card className="glass border-white/10">
-                      <CardHeader>
-                        <CardTitle className="text-lg font-bold flex items-center gap-2">
-                          <MapPin className="w-5 h-5 text-emerald-500" />
-                          Top Cities by Events
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        {!analytics?.topCities || analytics.topCities.length === 0 ? (
-                          <p className="text-sm text-muted-foreground text-center py-6">No data available.</p>
-                        ) : (
-                          analytics.topCities.map((item: any, index: number) => (
-                            <div key={item.city} className="flex justify-between items-center py-3 border-b border-white/5 last:border-0">
-                              <div className="flex items-center gap-3">
-                                <span className="font-semibold text-muted-foreground text-sm">#{index + 1}</span>
-                                <span className="font-medium">{item.city}</span>
-                              </div>
-                              <Badge variant="outline" className="bg-white/5">{item.count} events</Badge>
-                            </div>
-                          ))
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                </>
-              )}
-            </TabsContent>
-          )}
-
-          {isSuperAdmin && (
-            <TabsContent value="moderation" className="space-y-4">
-              <Card className="glass border-white/10">
-                <CardHeader>
-                  <CardTitle>Pending Events</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className="h-32 animate-pulse bg-white/5 rounded-lg"></div>
-                  ) : pendingEvents.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-50 text-green-500" />
-                      All caught up! No pending events to moderate.
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {pendingEvents.map(event => (
-                        <div key={event.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 gap-4">
-                          <div>
-                            <h4 className="font-bold">{event.title}</h4>
-                            <div className="text-sm text-muted-foreground flex gap-4 mt-1">
-                              <span>{event.institution}</span>
-                              <span>{new Date(event.date).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline" className="border-green-500/50 hover:bg-green-500/10 text-green-500" onClick={() => handleUpdateStatus(event.id, "approved")}>
-                              <CheckCircle className="w-4 h-4 mr-2" /> Approve
-                            </Button>
-                            <Button size="sm" variant="outline" className="border-red-500/50 hover:bg-red-500/10 text-red-500" onClick={() => handleUpdateStatus(event.id, "rejected")}>
-                              <XCircle className="w-4 h-4 mr-2" /> Reject
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                  {pendingEvents.length > 3 && (
+                    <span className="text-muted-foreground/60">+{pendingEvents.length - 3} more</span>
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0 border-amber-500/30 text-amber-500 hover:bg-amber-500/10"
+                onClick={() => setView("events")}
+              >
+                Review
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-          <TabsContent value="all">
-            <Card className="glass border-white/10">
-              <CardHeader>
-                <CardTitle>
-                  {isSuperAdmin ? "All Platform Events" : "My Institution Events"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {events.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No events found.
-                    </div>
-                  ) : (
-                    events.map(event => (
-                      <div key={event.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 gap-4">
-                        <div>
-                          <h4 className="font-medium">{event.title}</h4>
-                          <p className="text-xs text-muted-foreground">{event.institution}</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Badge variant={
-                            event.status === "approved" ? "default" :
-                            event.status === "pending" ? "outline" :
-                            event.status === "rejected" ? "destructive" : "secondary"
-                          }>
+        {/* View toggle */}
+        <div className="flex items-center gap-1 mb-6 p-0.5 bg-muted/50 rounded-lg w-fit">
+          <button
+            onClick={() => setView("events")}
+            className={cn(
+              "px-4 py-1.5 text-sm font-medium rounded-md transition-colors",
+              view === "events" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Events
+          </button>
+          {isSuperAdmin && (
+            <button
+              onClick={() => setView("people")}
+              className={cn(
+                "px-4 py-1.5 text-sm font-medium rounded-md transition-colors",
+                view === "people" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              People
+            </button>
+          )}
+        </div>
+
+        {/* ── Events view ── */}
+        {view === "events" && (
+          <div className="space-y-3">
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-16 bg-muted/30 rounded-lg animate-pulse" />
+              ))
+            ) : events.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <Calendar className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                <p className="text-sm font-medium mb-1">No events yet</p>
+                <p className="text-xs text-muted-foreground/60">
+                  {isSuperAdmin ? "Events will appear here once institutions create them." : "Create your first event to get started."}
+                </p>
+              </div>
+            ) : (
+              events.map(event => {
+                const isPending = event.status === "pending"
+                return (
+                  <div
+                    key={event.id}
+                    className={cn(
+                      "flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border gap-3 transition-colors",
+                      isPending
+                        ? "bg-amber-500/[0.02] border-amber-500/10"
+                        : "bg-card border-border/40 hover:border-border/80"
+                    )}
+                  >
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 mt-0.5">
+                        <Calendar className="w-4 h-4 text-primary/60" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold">{event.title}</span>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[10px] px-1.5 py-0 h-4",
+                              event.status === "approved" && "border-emerald-500/30 text-emerald-500",
+                              event.status === "pending" && "border-amber-500/30 text-amber-500",
+                              event.status === "rejected" && "border-red-500/30 text-red-500",
+                            )}
+                          >
                             {event.status}
                           </Badge>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => navigate(`/admin/events/${event.id}/attendees`)}
-                          >
-                            <Users className="w-4 h-4 mr-2" /> Attendees ({event.attendees || 0})
-                          </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
+                          {event.institution && <span>{event.institution}</span>}
+                          {event.date && <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
+                          <span>{event.attendees || 0} attendee{(event.attendees || 0) !== 1 ? 's' : ''}</span>
                         </div>
                       </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {isSuperAdmin && (
-            <TabsContent value="users">
-              <Card className="glass border-white/10">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-primary" />
-                    All Platform Users
-                    <Badge variant="outline" className="ml-auto">{filteredUsers.length} results</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Search + Filter bar */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search by name, email, or institution..."
-                        value={userSearch}
-                        onChange={e => setUserSearch(e.target.value)}
-                        className="pl-9 bg-white/5 border-white/10"
-                      />
                     </div>
-                    <div className="flex gap-2">
-                      {['all', 'citizen', 'institution_admin', 'super_admin'].map(r => (
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isSuperAdmin && isPending && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-3 text-xs border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10"
+                            onClick={() => handleUpdateStatus(event.id, "approved")}
+                          >
+                            <CheckCircle className="w-3 h-3 mr-1.5" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-3 text-xs border-red-500/30 text-red-500 hover:bg-red-500/10"
+                            onClick={() => handleUpdateStatus(event.id, "rejected")}
+                          >
+                            <XCircle className="w-3 h-3 mr-1.5" />
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-xs"
+                        onClick={() => navigate(`/admin/events/${event.id}/attendees`)}
+                      >
+                        <Users className="w-3 h-3 mr-1.5" />
+                        Attendees
+                      </Button>
+                      {(isSuperAdmin || event.status === "approved") && (
                         <Button
-                          key={r}
+                          variant="ghost"
                           size="sm"
-                          variant={roleFilter === r ? 'default' : 'outline'}
-                          onClick={() => setRoleFilter(r)}
-                          className="capitalize text-xs"
+                          className="h-8 px-2 text-xs text-muted-foreground"
+                          onClick={() => navigate(`/events/${event.id}`)}
                         >
-                          {r === 'all' ? 'All' : r === 'institution_admin' ? 'Inst. Admin' : r === 'super_admin' ? 'Super Admin' : 'Citizen'}
+                          <ExternalLink className="w-3 h-3" />
                         </Button>
-                      ))}
+                      )}
                     </div>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        setRoleFilter('institution_admin')
-                        setShowProvisionDialog(true)
-                      }}
-                      className="w-full sm:w-auto"
-                    >
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Add
-                    </Button>
                   </div>
+                )
+              })
+            )}
+          </div>
+        )}
 
-                  {isUsersLoading ? (
-                    <div className="space-y-3">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className="h-14 bg-white/5 rounded-lg animate-pulse" />
-                      ))}
-                    </div>
-                  ) : filteredUsers.length === 0 ? (
-                    <div className="text-center py-10 text-muted-foreground">
-                      <Users className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                      No users found matching your search.
-                    </div>
-                  ) : (
-                    <div className="border border-white/10 rounded-lg overflow-hidden">
-                      <table className="w-full text-sm text-left">
-                        <thead>
-                          <tr className="border-b border-white/10 bg-white/5">
-                            <th className="p-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Name</th>
-                            <th className="p-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Email</th>
-                            <th className="p-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Role</th>
-                            <th className="p-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Institution</th>
-                            <th className="p-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Status</th>
-                            <th className="p-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Joined</th>
-                            <th className="p-3"></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredUsers.map(u => (
-                            <tr key={u.id} className="border-b border-white/5 hover:bg-white/5 last:border-0">
-                              <td className="p-3 font-medium">{u.name}</td>
-                              <td className="p-3 text-muted-foreground text-xs">{u.email}</td>
-                              <td className="p-3">
-                                <Badge variant="outline" className={
-                                  u.role === 'super_admin' ? 'border-amber-500/50 text-amber-500' :
-                                  u.role === 'institution_admin' ? 'border-primary/50 text-primary' :
-                                  'border-white/20 text-muted-foreground'
-                                }>
-                                  {u.role === 'super_admin' ? 'Super Admin' : u.role === 'institution_admin' ? 'Inst. Admin' : 'Citizen'}
-                                </Badge>
-                              </td>
-                              <td className="p-3 text-muted-foreground text-xs">{u.institution || '—'}</td>
-                              <td className="p-3">
-                                <Badge variant={u.suspended ? 'destructive' : 'default'} className="text-xs">
-                                  {u.suspended ? 'Suspended' : 'Active'}
-                                </Badge>
-                              </td>
-                              <td className="p-3 text-muted-foreground text-xs">
-                                {new Date(u.createdAt).toLocaleDateString()}
-                              </td>
-                              <td className="p-3">
-                                {u.role !== 'super_admin' && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    disabled={togglingUserId === u.id}
-                                    onClick={() => handleToggleSuspend(u)}
-                                    className={u.suspended
-                                      ? 'border-green-500/40 text-green-500 hover:bg-green-500/10 text-xs'
-                                      : 'border-red-500/40 text-red-500 hover:bg-red-500/10 text-xs'
-                                    }
-                                  >
-                                    {togglingUserId === u.id ? (
-                                      <Loader2 className="w-3 h-3 animate-spin" />
-                                    ) : u.suspended ? (
-                                      <><UserCheck className="w-3 h-3 mr-1" />Activate</>
-                                    ) : (
-                                      <><Ban className="w-3 h-3 mr-1" />Suspend</>
-                                    )}
-                                  </Button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
-        </Tabs>
+        {/* ── People view (super admin only) ── */}
+        {isSuperAdmin && view === "people" && (
+          <div className="space-y-4">
+            {/* Search + filters */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, email, or institution..."
+                  value={userSearch}
+                  onChange={e => setUserSearch(e.target.value)}
+                  className="pl-9 bg-card border-border/40"
+                />
+              </div>
+              <div className="flex gap-2">
+                {(['all', 'citizen', 'institution_admin'] as const).map(r => (
+                  <button
+                    key={r}
+                    onClick={() => setRoleFilter(r)}
+                    className={cn(
+                      "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                      roleFilter === r
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card border border-border/40 text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {r === 'all' ? 'All' : r === 'institution_admin' ? 'Institution Admins' : 'Users'}
+                  </button>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowProvisionDialog(true)}
+                className="shrink-0"
+              >
+                <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                Add admin
+              </Button>
+            </div>
 
-        {/* Dialog for provisioning institution admins */}
+            {/* Users table */}
+            {isUsersLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-12 bg-muted/30 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <Users className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                <p className="text-sm font-medium mb-1">No people found</p>
+                <p className="text-xs text-muted-foreground/60">Try adjusting your search or filters.</p>
+              </div>
+            ) : (
+              <div className="border border-border/40 rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border/40 bg-muted/20">
+                      <th className="p-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Name</th>
+                      <th className="p-3 text-left text-xs font-medium text-muted-foreground tracking-wide hidden sm:table-cell">Email</th>
+                      <th className="p-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Role</th>
+                      <th className="p-3 text-left text-xs font-medium text-muted-foreground tracking-wide hidden md:table-cell">Institution</th>
+                      <th className="p-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Status</th>
+                      <th className="p-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map(u => (
+                      <tr key={u.id} className="border-b border-border/20 hover:bg-muted/10 transition-colors last:border-0">
+                        <td className="p-3 font-medium text-sm">{u.name}</td>
+                        <td className="p-3 text-xs text-muted-foreground hidden sm:table-cell">{u.email}</td>
+                        <td className="p-3">
+                          <span className={cn(
+                            "text-xs font-medium",
+                            u.role === 'super_admin' && 'text-amber-500',
+                            u.role === 'institution_admin' && 'text-primary',
+                            u.role === 'citizen' && 'text-muted-foreground',
+                          )}>
+                            {u.role === 'super_admin' ? 'Super Admin' : u.role === 'institution_admin' ? 'Inst. Admin' : 'User'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">{u.institution || '—'}</td>
+                        <td className="p-3">
+                          <span className={cn(
+                            "text-xs font-medium",
+                            u.suspended ? 'text-red-500' : 'text-emerald-500'
+                          )}>
+                            {u.suspended ? 'Suspended' : 'Active'}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          {u.role !== 'super_admin' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={togglingUserId === u.id}
+                              onClick={() => handleToggleSuspend(u)}
+                              className={cn(
+                                "h-7 px-2 text-xs",
+                                u.suspended
+                                  ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+                                  : "text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                              )}
+                            >
+                              {togglingUserId === u.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : u.suspended ? (
+                                <><UserCheck className="w-3 h-3 mr-1" />Activate</>
+                              ) : (
+                                <><Ban className="w-3 h-3 mr-1" />Suspend</>
+                              )}
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Provision dialog ── */}
         <Dialog
           open={showProvisionDialog}
           onOpenChange={(open) => {
@@ -631,99 +540,100 @@ export default function AdminDashboard() {
             }
           }}
         >
-          <DialogContent className="glass border-white/20 text-foreground max-w-lg">
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                <UserPlus className="w-6 h-6 text-primary" />
-                Add Institution Admin
+              <DialogTitle className="text-lg font-bold flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-primary" />
+                Add institution admin
               </DialogTitle>
               <DialogDescription>
-                Create a login for a partner institution admin using the same provision flow as Swagger.
+                Create an account for someone who manages events at their institution.
               </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleProvision} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="provision-name" className="text-sm font-medium">
-                  Admin Name
+              <div className="space-y-1.5">
+                <label htmlFor="provision-name" className="text-xs font-medium text-muted-foreground">
+                  Full name
                 </label>
                 <Input
                   id="provision-name"
-                  placeholder="e.g. Tech Admin"
+                  placeholder="e.g. Alex Rivera"
                   value={provisionForm.name}
                   onChange={(e) => setProvisionForm((prev) => ({ ...prev, name: e.target.value }))}
-                  className="bg-white/5 border-white/10"
+                  className="border-border/40 h-9 text-sm"
                   autoComplete="name"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="provision-email" className="text-sm font-medium">
-                  Email Address
+              <div className="space-y-1.5">
+                <label htmlFor="provision-email" className="text-xs font-medium text-muted-foreground">
+                  Email
                 </label>
                 <Input
                   id="provision-email"
                   type="email"
-                  placeholder="admin@institution.edu"
+                  placeholder="alex@institution.edu"
                   value={provisionForm.email}
                   onChange={(e) => setProvisionForm((prev) => ({ ...prev, email: e.target.value }))}
-                  className="bg-white/5 border-white/10"
+                  className="border-border/40 h-9 text-sm"
                   autoComplete="email"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="provision-institution" className="text-sm font-medium">
-                  Institution
+              <div className="space-y-1.5">
+                <label htmlFor="provision-institution" className="text-xs font-medium text-muted-foreground">
+                  Institution name
                 </label>
                 <Input
                   id="provision-institution"
                   placeholder="e.g. TechVision Institute"
                   value={provisionForm.institution}
                   onChange={(e) => setProvisionForm((prev) => ({ ...prev, institution: e.target.value }))}
-                  className="bg-white/5 border-white/10"
+                  className="border-border/40 h-9 text-sm"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="provision-password" className="text-sm font-medium">
-                  Temporary Password
+              <div className="space-y-1.5">
+                <label htmlFor="provision-password" className="text-xs font-medium text-muted-foreground">
+                  Temporary password
                 </label>
                 <Input
                   id="provision-password"
                   type="password"
-                  placeholder="Minimum 6 characters"
+                  placeholder="At least 6 characters"
                   value={provisionForm.password}
                   onChange={(e) => setProvisionForm((prev) => ({ ...prev, password: e.target.value }))}
-                  className="bg-white/5 border-white/10"
+                  className="border-border/40 h-9 text-sm"
                   autoComplete="new-password"
                   minLength={6}
                   required
                 />
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="gap-2 pt-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setShowProvisionDialog(false)}
                   disabled={isProvisioning}
+                  size="sm"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isProvisioning}>
+                <Button type="submit" disabled={isProvisioning} size="sm">
                   {isProvisioning ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
                       Creating...
                     </>
                   ) : (
                     <>
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Create Admin
+                      <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                      Create admin
                     </>
                   )}
                 </Button>

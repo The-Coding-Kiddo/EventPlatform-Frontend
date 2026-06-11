@@ -25,5 +25,13 @@ export const authService = {
   me: async () => {
     const response = await api.get("/auth/me")
     return response.data?.data || response.data || response
+  },
+  updateProfile: async (data: { name?: string; email?: string }) => {
+    const response = await api.patch("/user/profile", data)
+    return response.data?.data || response.data || response
+  },
+  changePassword: async (data: { currentPassword: string; newPassword: string }) => {
+    const response = await api.patch("/user/password", data)
+    return response.data?.data || response.data || response
   }
 }

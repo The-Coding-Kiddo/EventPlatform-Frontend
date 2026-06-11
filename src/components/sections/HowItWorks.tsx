@@ -41,66 +41,60 @@ const organizerSteps = [
 
 export function HowItWorks() {
   return (
-    <section className="py-32 bg-background relative overflow-hidden">
-      <div className="absolute inset-0 z-0 opacity-[0.015] pointer-events-none"
-        style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '40px 40px' }}
-      />
-
-      <div className="container mx-auto px-4 relative z-10">
+    <section className="py-20 lg:py-28 bg-background border-t border-border">
+      <div className="max-w-screen-2xl mx-auto px-4 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="max-w-3xl mb-20"
+          transition={{ duration: 0.4 }}
+          className="max-w-2xl mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 text-primary text-[10px] uppercase font-bold tracking-widest mb-6 border border-primary/10">
-            <span>How It Works</span>
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 border border-border rounded text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+            How It Works
           </div>
 
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 leading-tight text-foreground">
-            From Discovery to Impact <br />
-            <span className="text-primary">in Three Steps.</span>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
+            From Discovery to Impact in Three Steps.
           </h2>
 
-          <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
+          <p className="text-base text-muted-foreground leading-relaxed max-w-xl">
             Whether you are searching for your next learning opportunity or organizing a world-class event,
             Eventim makes the journey intuitive for everyone involved.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-12 md:gap-20">
-          {/* Attendee Flow */}
+        <div className="grid md:grid-cols-2 gap-12 md:gap-16">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-12 flex items-center gap-3">
-              <span className="h-px flex-1 bg-border/60" />
-              For Attendees
-              <span className="h-px flex-1 bg-border/60" />
-            </h3>
+            <div className="flex items-center gap-3 mb-10">
+              <span className="h-px flex-1 bg-border" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">For Attendees</span>
+              <span className="h-px flex-1 bg-border" />
+            </div>
 
             <div className="space-y-0">
               {attendeeSteps.map((step, i) => (
-                <div key={step.title} className="flex gap-6 group">
+                <div key={step.title} className="flex gap-5 group">
                   <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                      <step.icon className="w-5 h-5" />
+                    <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center shrink-0">
+                      <step.icon className="w-4 h-4 text-foreground" />
                     </div>
                     {i < attendeeSteps.length - 1 && (
-                      <div className="w-0.5 flex-1 bg-gradient-to-b from-primary/30 to-transparent my-1.5" />
+                      <div className="w-px flex-1 bg-border my-1" />
                     )}
                   </div>
-                  <div className="pb-11 pt-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                  <div className="pb-8 pt-1">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                         Step {i + 1}
                       </span>
                     </div>
-                    <h4 className="text-lg font-bold mb-1 text-foreground">{step.title}</h4>
+                    <h4 className="text-base font-bold mb-1">{step.title}</h4>
                     <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
                   </div>
                 </div>
@@ -108,37 +102,36 @@ export function HowItWorks() {
             </div>
           </motion.div>
 
-          {/* Organizer Flow */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.4, delay: 0.15 }}
           >
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-12 flex items-center gap-3">
-              <span className="h-px flex-1 bg-border/60" />
-              For Organizers
-              <span className="h-px flex-1 bg-border/60" />
-            </h3>
+            <div className="flex items-center gap-3 mb-10">
+              <span className="h-px flex-1 bg-border" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">For Organizers</span>
+              <span className="h-px flex-1 bg-border" />
+            </div>
 
             <div className="space-y-0">
               {organizerSteps.map((step, i) => (
-                <div key={step.title} className="flex gap-6 group">
+                <div key={step.title} className="flex gap-5 group">
                   <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                      <step.icon className="w-5 h-5" />
+                    <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center shrink-0">
+                      <step.icon className="w-4 h-4 text-foreground" />
                     </div>
                     {i < organizerSteps.length - 1 && (
-                      <div className="w-0.5 flex-1 bg-gradient-to-b from-primary/30 to-transparent my-1.5" />
+                      <div className="w-px flex-1 bg-border my-1" />
                     )}
                   </div>
-                  <div className="pb-11 pt-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                  <div className="pb-8 pt-1">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                         Step {i + 1}
                       </span>
                     </div>
-                    <h4 className="text-lg font-bold mb-1 text-foreground">{step.title}</h4>
+                    <h4 className="text-base font-bold mb-1">{step.title}</h4>
                     <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
                   </div>
                 </div>
@@ -151,18 +144,18 @@ export function HowItWorks() {
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-          className="mt-16 text-center"
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="mt-12 text-center"
         >
           <div className="inline-flex flex-col sm:flex-row items-center gap-4">
             <Link to="/events">
-              <Button size="lg" className="rounded-xl h-14 px-10 text-base shadow-xl shadow-primary/20">
+              <Button className="bg-foreground text-background hover:bg-foreground/90 text-sm font-semibold px-6 py-3 h-auto rounded-none">
                 Find an Event
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </Link>
             <Link to="/create-event">
-              <Button size="lg" variant="outline" className="rounded-xl h-14 px-10 text-base">
+              <Button variant="outline" className="border-border text-sm font-semibold px-6 py-3 h-auto rounded-none">
                 Host Your First Event
               </Button>
             </Link>
