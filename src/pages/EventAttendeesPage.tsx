@@ -70,7 +70,7 @@ export default function EventAttendeesPage() {
         if (user?.role !== 'super_admin') {
           if (eventData.institution !== user?.institution) {
             toast.error("Security Alert: You do not have permission to access this institution's data.")
-            navigate("/admin")
+            navigate("/institution/dashboard")
             return
           }
         }
@@ -87,7 +87,7 @@ export default function EventAttendeesPage() {
         setWaitlist(queued)
       } catch (error) {
         toast.error("Failed to load event data or unauthorized access")
-        navigate("/admin")
+        navigate("/institution/dashboard")
       } finally {
         setIsLoading(false)
       }
@@ -215,7 +215,7 @@ export default function EventAttendeesPage() {
         {/* Breadcrumbs / Back */}
         <Button 
           variant="ghost" 
-          onClick={() => navigate("/admin")} 
+          onClick={() => navigate("/institution/dashboard")} 
           className="mb-6 -ml-4 text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="mr-2 w-4 h-4" />

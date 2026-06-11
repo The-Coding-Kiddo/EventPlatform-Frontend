@@ -25,7 +25,8 @@ export function Navbar() {
         
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
           <Link to="/events" className="hover:text-primary transition-colors">Explore Events</Link>
-          {(user?.role === "super_admin" || user?.role === "institution_admin") && (
+          <Link to="/institutions" className="hover:text-primary transition-colors">Institutions</Link>
+          {(user?.role === "super_admin" || user?.role === "institution") && (
             <Link to="/create-event" className="hover:text-primary transition-colors">Host an Event</Link>
           )}
         </nav>
@@ -57,11 +58,11 @@ export function Navbar() {
                   </Link>
                 </DropdownMenuItem>
                 
-                {(user?.role === 'institution_admin' || user?.role === 'super_admin') && (
+                {(user?.role === 'institution' || user?.role === 'super_admin') && (
                   <DropdownMenuItem asChild>
-                    <Link to="/admin" className="cursor-pointer">
+                    <Link to="/institution/dashboard" className="cursor-pointer">
                       <ShieldCheck className="mr-2 h-4 w-4 text-primary" />
-                      <span>Admin Dashboard</span>
+                      <span>Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
                 )}

@@ -42,7 +42,7 @@ type PlatformUser = {
   createdAt: string
 }
 
-export default function AdminDashboard() {
+export default function InstitutionDashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [events, setEvents] = useState<Event[]>([])
@@ -69,7 +69,7 @@ export default function AdminDashboard() {
         const data = await eventService.getAllEvents()
         setEvents(data?.data?.items || data?.items || [])
       } catch (error) {
-        toast.error("Failed to fetch admin events")
+        toast.error("Failed to fetch events")
       } finally {
         setIsLoading(false)
       }
@@ -132,8 +132,8 @@ export default function AdminDashboard() {
     }
     setIsProvisioning(true)
     try {
-      const result = await eventService.provisionAdmin({ name, email, password, institution })
-      toast.success(`Institution Admin created for ${institution}!`)
+                      const result = await eventService.createInstitution({ name, email, password, institution })
+      toast.success(`Institution created for ${institution}!`)
       setShowProvisionDialog(false)
       setProvisionForm({ name: '', email: '', password: '', institution: '' })
       if (result?.user) {
@@ -142,12 +142,12 @@ export default function AdminDashboard() {
           createdAt: new Date().toISOString(),
           ...result.user,
         }, ...prev])
-        setRoleFilter('institution_admin')
+        setRoleFilter('institution')
       } else {
         setPlatformUsers([])
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to create institution admin")
+      toast.error(error.response?.data?.message || "Failed to create institution")
     } finally {
       setIsProvisioning(false)
     }
@@ -383,7 +383,7 @@ export default function AdminDashboard() {
                         variant="outline"
                         size="sm"
                         className="h-8 px-3 text-xs"
-                        onClick={() => navigate(`/admin/events/${event.id}/attendees`)}
+                        onClick={() => navigate(`/institution/events/${event.id}/attendees`)}
                       >
                         <Users className="w-3 h-3 mr-1.5" />
                         Attendees
@@ -421,7 +421,7 @@ export default function AdminDashboard() {
                 />
               </div>
               <div className="flex gap-2">
-                {(['all', 'citizen', 'institution_admin'] as const).map(r => (
+                {(['all', 'citizen', 'institution'] as const).map(r => (
                   <button
                     key={r}
                     onClick={() => setRoleFilter(r)}
@@ -432,7 +432,7 @@ export default function AdminDashboard() {
                         : "bg-card border border-border/40 text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    {r === 'all' ? 'All' : r === 'institution_admin' ? 'Institution Admins' : 'Users'}
+                    {r === 'all' ? 'All' : r === 'institution' ? 'Institutions' : 'Users'}
                   </button>
                 ))}
               </div>
@@ -443,7 +443,7 @@ export default function AdminDashboard() {
                 className="shrink-0"
               >
                 <UserPlus className="w-3.5 h-3.5 mr-1.5" />
-                Add admin
+                Add institution
               </Button>
             </div>
 
@@ -482,10 +482,10 @@ export default function AdminDashboard() {
                           <span className={cn(
                             "text-xs font-medium",
                             u.role === 'super_admin' && 'text-amber-500',
-                            u.role === 'institution_admin' && 'text-primary',
+                            u.role === 'institution' && 'text-primary',
                             u.role === 'citizen' && 'text-muted-foreground',
                           )}>
-                            {u.role === 'super_admin' ? 'Super Admin' : u.role === 'institution_admin' ? 'Inst. Admin' : 'User'}
+                            {u.role === 'super_admin' ? 'Super Admin' : u.role === 'institution' ? 'Institution' : 'User'}
                           </span>
                         </td>
                         <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">{u.institution || '—'}</td>
@@ -544,10 +544,10 @@ export default function AdminDashboard() {
             <DialogHeader>
               <DialogTitle className="text-lg font-bold flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-primary" />
-                Add institution admin
+                Add institution
               </DialogTitle>
               <DialogDescription>
-                Create an account for someone who manages events at their institution.
+                Create an account for an institution that manages events.
               </DialogDescription>
             </DialogHeader>
 
@@ -633,7 +633,7 @@ export default function AdminDashboard() {
                   ) : (
                     <>
                       <UserPlus className="w-3.5 h-3.5 mr-1.5" />
-                      Create admin
+                      Create institution
                     </>
                   )}
                 </Button>

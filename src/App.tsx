@@ -7,7 +7,9 @@ import CreateEventPage from "@/pages/CreateEventPage"
 import EventsPage from "@/pages/EventsPage"
 import EventDetailPage from "@/pages/EventDetailPage"
 import ProfilePage from "@/pages/ProfilePage"
-import AdminDashboard from "@/pages/AdminDashboard"
+import InstitutionDashboard from "@/pages/InstitutionDashboard"
+import InstitutionProfilePage from "@/pages/InstitutionProfilePage"
+import InstitutionsPage from "@/pages/InstitutionsPage"
 import EventAttendeesPage from "@/pages/EventAttendeesPage"
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from "@/context/AuthContext"
@@ -44,6 +46,8 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:id" element={<MainLayout><EventDetailPage /></MainLayout>} />
+          <Route path="/institutions" element={<MainLayout><InstitutionsPage /></MainLayout>} />
+          <Route path="/institutions/:id" element={<MainLayout><InstitutionProfilePage /></MainLayout>} />
           
           {/* General Protected Routes */}
           <Route element={<ProtectedRoute />}>
@@ -51,10 +55,10 @@ function App() {
           </Route>
 
           {/* Admin & Institution Admin Protected Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["super_admin", "institution_admin"]} />}>
+          <Route element={<ProtectedRoute allowedRoles={["super_admin", "institution"]} />}>
             <Route path="/create-event" element={<MainLayout><CreateEventPage /></MainLayout>} />
-            <Route path="/admin" element={<MainLayout><AdminDashboard /></MainLayout>} />
-            <Route path="/admin/events/:id/attendees" element={<MainLayout><EventAttendeesPage /></MainLayout>} />
+            <Route path="/institution/dashboard" element={<MainLayout><InstitutionDashboard /></MainLayout>} />
+            <Route path="/institution/events/:id/attendees" element={<MainLayout><EventAttendeesPage /></MainLayout>} />
           </Route>
         </Routes>
         <Toaster position="top-center" richColors />

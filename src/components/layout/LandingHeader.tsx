@@ -104,9 +104,9 @@ export function LandingHeader() {
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
-                {(user?.role === 'institution_admin' || user?.role === 'super_admin') && (
+                {(user?.role === 'institution' || user?.role === 'super_admin') && (
                   <DropdownMenuItem asChild>
-                    <Link to="/admin" className="cursor-pointer">
+                    <Link to="/institution/dashboard" className="cursor-pointer">
                       <ShieldCheck className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
                     </Link>
