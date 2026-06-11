@@ -32,9 +32,9 @@ export function CategoryPills() {
   }
 
   return (
-    <section className="py-8 lg:py-10 bg-background border-b border-border">
+    <section className="py-5 lg:py-8 bg-background border-b border-border">
       <div className="max-w-screen-2xl mx-auto px-4 lg:px-8">
-        <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-none" style={{ scrollbarWidth: "none" }}>
+        <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-3">
           {categories.map((cat) => {
             const Icon = cat.icon
             const isActive = active === cat.label
@@ -42,14 +42,14 @@ export function CategoryPills() {
               <button
                 key={cat.label}
                 onClick={() => handleClick(cat.label)}
-                className={`flex flex-col items-center gap-2 px-5 py-4 rounded-xl border transition-colors shrink-0 ${
+                className={`flex flex-col items-center gap-1 sm:gap-1.5 px-4 sm:px-5 py-2.5 sm:py-3.5 rounded-lg sm:rounded-xl border transition-colors ${
                   isActive
                     ? "border-foreground bg-muted"
                     : "border-border hover:border-foreground/30"
                 }`}
               >
-                <Icon className="w-5 h-5 text-foreground" />
-                <span className="text-xs font-medium text-foreground">{cat.label}</span>
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+                <span className="text-[11px] sm:text-xs font-medium text-foreground">{cat.label}</span>
               </button>
             )
           })}

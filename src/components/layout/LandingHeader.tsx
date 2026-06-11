@@ -28,62 +28,63 @@ export function LandingHeader() {
     if (location.trim()) params.set("location", location.trim())
     const qs = params.toString()
     navigate(qs ? `/events?${qs}` : "/events")
+    setMobileMenuOpen(false)
   }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
-      <div className="max-w-screen-2xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-screen-2xl mx-auto px-4 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
         <Link to="/" className="shrink-0" aria-label="Eventim home">
-          <EventimLogo size={20} />
+          <EventimLogo size={18} />
         </Link>
 
         <form onSubmit={handleSearch} className="hidden md:flex items-center flex-1 max-w-xl mx-auto">
           <div className="flex items-center w-full border border-border rounded-full overflow-hidden bg-background focus-within:border-foreground/30 transition-colors">
-            <div className="flex items-center flex-1 min-w-0 px-4">
-              <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="flex items-center flex-1 min-w-0 px-3 sm:px-4">
+              <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
               <input
                 type="text"
                 placeholder="Search events, topics..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="flex-1 min-w-0 bg-transparent border-0 outline-none px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60"
+                className="flex-1 min-w-0 bg-transparent border-0 outline-none px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60"
               />
             </div>
-            <div className="w-px h-6 bg-border" />
-            <div className="flex items-center px-4">
-              <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="w-px h-5 sm:h-6 bg-border shrink-0" />
+            <div className="items-center px-2 sm:px-4 hidden sm:flex">
+              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
               <input
                 type="text"
                 placeholder="Location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-24 bg-transparent border-0 outline-none px-2 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60"
+                className="w-20 sm:w-24 bg-transparent border-0 outline-none px-1.5 sm:px-2 py-2 sm:py-2.5 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60"
               />
             </div>
             <button
               type="submit"
-              className="flex items-center gap-2 px-5 py-2.5 bg-foreground text-background text-sm font-medium hover:bg-foreground/90 transition-colors"
+              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-foreground text-background text-xs sm:text-sm font-medium hover:bg-foreground/90 transition-colors shrink-0"
               aria-label="Search"
             >
-              <Search className="w-4 h-4" />
+              <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span className="hidden lg:inline">Search</span>
             </button>
           </div>
         </form>
 
-        <nav className="hidden md:flex items-center gap-1">
-          <Link to="/events" className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+        <nav className="hidden md:flex items-center gap-0.5 sm:gap-1">
+          <Link to="/events" className="px-2 sm:px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors font-medium whitespace-nowrap">
             Find Events
           </Link>
-          <Link to="/create-event" className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+          <Link to="/create-event" className="px-2 sm:px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors font-medium whitespace-nowrap">
             Create
           </Link>
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full ml-2">
-                  <Avatar className="h-9 w-9 border border-border">
-                    <AvatarFallback className="bg-muted text-foreground uppercase text-xs">
+                <Button variant="ghost" className="relative h-8 w-8 sm:h-9 sm:w-9 rounded-full ml-1 sm:ml-2">
+                  <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-border">
+                    <AvatarFallback className="bg-muted text-foreground uppercase text-[10px] sm:text-xs">
                       {user?.name?.[0] || "U"}
                     </AvatarFallback>
                   </Avatar>
@@ -119,19 +120,23 @@ export function LandingHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center gap-1 ml-3">
+            <div className="flex items-center gap-1 sm:gap-1 ml-1 sm:ml-3">
               <Link to="/login">
-                <Button variant="ghost" size="sm" className="text-sm font-medium">Sign In</Button>
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm font-medium h-8 sm:h-9 px-2 sm:px-3">
+                  Sign In
+                </Button>
               </Link>
               <Link to="/register">
-                <Button size="sm" className="text-sm font-medium">Get Started</Button>
+                <Button size="sm" className="text-xs sm:text-sm font-medium h-8 sm:h-9 px-3 sm:px-4">
+                  Get Started
+                </Button>
               </Link>
             </div>
           )}
         </nav>
 
         <button
-          className="md:hidden p-2 -mr-2"
+          className="md:hidden flex items-center justify-center p-2 -mr-2 h-10 w-10"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -140,31 +145,49 @@ export function LandingHeader() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background px-4 py-4 space-y-3">
-          <form onSubmit={(e) => { handleSearch(e); setMobileMenuOpen(false) }} className="flex items-center border border-border rounded-full overflow-hidden">
-            <input
-              type="text"
-              placeholder="Search events..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="flex-1 bg-transparent border-0 outline-none px-4 py-2.5 text-sm"
-            />
-            <button type="submit" className="p-2.5 bg-foreground text-background">
-              <Search className="w-4 h-4" />
+        <div className="md:hidden border-t border-border bg-background px-4 py-4 space-y-4 max-h-[calc(100vh-3.5rem)] overflow-y-auto">
+          <form onSubmit={handleSearch} className="space-y-2">
+            <div className="flex items-center border border-border rounded-lg overflow-hidden">
+              <Search className="w-4 h-4 text-muted-foreground ml-3 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search events..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="flex-1 bg-transparent border-0 outline-none px-3 py-2.5 text-sm"
+              />
+            </div>
+            <div className="flex items-center border border-border rounded-lg overflow-hidden">
+              <MapPin className="w-4 h-4 text-muted-foreground ml-3 shrink-0" />
+              <input
+                type="text"
+                placeholder="Location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="flex-1 bg-transparent border-0 outline-none px-3 py-2.5 text-sm"
+              />
+            </div>
+            <button type="submit" className="w-full py-2.5 bg-foreground text-background text-sm font-medium">
+              Search
             </button>
           </form>
-          <div className="flex flex-col gap-1">
-            <Link to="/events" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 text-sm hover:bg-muted rounded-lg">Find Events</Link>
-            <Link to="/create-event" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 text-sm hover:bg-muted rounded-lg">Create Event</Link>
+          <div className="border-t border-border pt-3 flex flex-col gap-0.5">
+            <Link to="/events" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 text-sm hover:bg-muted rounded-md">Find Events</Link>
+            <Link to="/create-event" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 text-sm hover:bg-muted rounded-md">Create Event</Link>
             {isAuthenticated ? (
               <>
-                <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 text-sm hover:bg-muted rounded-lg">Profile</Link>
-                <button onClick={() => { logout(); setMobileMenuOpen(false) }} className="px-3 py-2 text-sm hover:bg-muted rounded-lg text-left text-destructive">Log out</button>
+                <div className="border-t border-border my-2" />
+                <div className="px-3 py-2 text-xs text-muted-foreground">
+                  Signed in as <span className="font-medium text-foreground">{user?.name}</span>
+                </div>
+                <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 text-sm hover:bg-muted rounded-md">Profile</Link>
+                <button onClick={() => { logout(); setMobileMenuOpen(false) }} className="px-3 py-2.5 text-sm hover:bg-muted rounded-md text-left text-destructive">Log out</button>
               </>
             ) : (
               <>
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 text-sm hover:bg-muted rounded-lg">Sign In</Link>
-                <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 text-sm hover:bg-muted rounded-lg">Get Started</Link>
+                <div className="border-t border-border my-2" />
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 text-sm hover:bg-muted rounded-md">Sign In</Link>
+                <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 text-sm font-medium text-primary hover:bg-muted rounded-md">Get Started</Link>
               </>
             )}
           </div>

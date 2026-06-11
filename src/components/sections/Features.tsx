@@ -59,7 +59,7 @@ export function Features() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 border border-border">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border">
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
@@ -67,7 +67,7 @@ export function Features() {
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.05 }}
-              className="p-8 border-r border-b border-border hover:bg-muted/30 transition-colors"
+              className="p-8 bg-background hover:bg-muted/30 transition-colors"
             >
               <div className="flex flex-col h-full">
                 <div className="w-9 h-9 border border-border flex items-center justify-center mb-5">
